@@ -1,17 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 
+const INIT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+
 const ChessBoard = ({ pgn }) => {
-  const [game, setGame] = useState(new Chess());
+  const gameRef = useRef(new Chess());
+  const [fen, setFen] = useState(INIT_FEN);
   const [moveHistory, setMoveHistory] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
+  const [startFen, setStartFen] = useState('start');
+
+  const chessGame = gameRef.current
 
   // Generate square styles programmatically - much cleaner than hardcoding
   const getSquareStyles = () => {
     const styles = {};
-    const lightColor = '#f0d9b5';
-    const darkColor = '#b58863';
+    const lightColor = '#ffffff';
+    const darkColor = '#000000';
     
     // Generate all 64 squares using a simple loop
     for (let file = 0; file < 8; file++) {
@@ -24,21 +30,35 @@ const ChessBoard = ({ pgn }) => {
       }
     }
     
+    // console.log({ styles })
     return styles;
   };
 
 
   useEffect(() => {
-    if (pgn) {
-      const newGame = new Chess();
-      try {
-        newGame.loadPgn(pgn);
-        setGame(newGame);
-        setMoveHistory(newGame.history());
-        setCurrentMoveIndex(newGame.history().length - 1);
-      } catch (error) {
-        console.error('Error loading PGN:', error);
+    if (!pgn) return;
+
+    try {
+      const parsed = new Chess();
+      parsed.loadPgn(pgn);
+      const headers = parsed.header ? parsed.header() : {};
+      const initialFen = headers?.SetUp === '1' && headers?.FEN ? headers.FEN : 'start';
+      console.log({ initialFen})
+
+      setStartFen(initialFen);
+      setMoveHistory(parsed.history());
+
+      // Initialize board to end position by default
+      const endGame = initialFen === 'start' ? new Chess() : new Chess(initialFen);
+      for (const san of parsed.history()) {
+        endGame.move(san);
       }
+      gameRef.current = endGame
+      console.log({ moveHistory})
+      setFen(INIT_FEN)
+      setCurrentMoveIndex(-1);
+    } catch (error) {
+      console.error('Error loading PGN:', error);
     }
   }, [pgn]);
 
@@ -46,27 +66,59 @@ const ChessBoard = ({ pgn }) => {
     console.log({ square })
   };
 
-  const goToMove = (moveIndex) => {
-    if (moveIndex < 0 || moveIndex >= moveHistory.length) return;
-    
-    const newGame = new Chess();
+  const goToMove = useCallback((moveIndex) => {
+    if (moveIndex < -1 || moveIndex >= moveHistory.length) return;
+
     try {
-      newGame.loadPgn(pgn);
-      // Navigate to the specific move
-      for (let i = 0; i <= moveIndex; i++) {
-        newGame.move(moveHistory[i]);
+      const base = startFen === 'start' ? new Chess() : new Chess(startFen);
+
+      if (moveIndex >= 0) {
+        for (let i = 0; i <= moveIndex; i++) {
+          base.move(moveHistory[i]);
+        }
       }
-      setGame(newGame);
+
+      console.log({ game: base.fen() })
+
+
+
+      gameRef.current = base;
+      setFen(base.fen());
       setCurrentMoveIndex(moveIndex);
     } catch (error) {
       console.error('Error navigating to move:', error);
     }
-  };
+  }, [moveHistory, startFen]);
 
-  const goToStart = () => goToMove(-1);
-  const goToEnd = () => goToMove(moveHistory.length - 1);
-  const goToPrevious = () => goToMove(currentMoveIndex - 1);
-  const goToNext = () => goToMove(currentMoveIndex + 1);
+  const goToStart = useCallback(() => goToMove(-1), [goToMove]);
+  const goToEnd = useCallback(() => goToMove(moveHistory.length - 1), [goToMove, moveHistory.length]);
+  const goToPrevious = useCallback(() => goToMove(currentMoveIndex - 1), [goToMove, currentMoveIndex]);
+  const goToNext = useCallback(() => goToMove(currentMoveIndex + 1), [goToMove, currentMoveIndex]);
+
+  const umm = () => {
+    console.log(`umm`)
+  }
+
+  // Keyboard navigation: Left/Right arrows
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPrevious();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNext();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToStart();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        goToEnd();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [goToPrevious, goToNext, goToStart, goToEnd]);
 
   if (!pgn) {
     return (
@@ -76,6 +128,69 @@ const ChessBoard = ({ pgn }) => {
     );
   }
 
+
+
+    // make a random "CPU" move
+    function makeRandomMove() {
+      // get all possible moves`
+      const possibleMoves = chessGame.moves();
+
+      // exit if the game is over
+      if (chessGame.isGameOver()) {
+        return;
+      }
+
+      // pick a random move
+      const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+
+      // make the move
+      chessGame.move(randomMove);
+
+      // update the position state
+      setFen(chessGame.fen());
+    }
+
+    // handle piece drop
+    function onPieceDrop({
+      sourceSquare,
+      targetSquare
+    }) {
+      // type narrow targetSquare potentially being null (e.g. if dropped off board)
+      if (!targetSquare) {
+        return false;
+      }
+
+      // try to make the move according to chess.js logic
+      try {
+        chessGame.move({
+          from: sourceSquare,
+          to: targetSquare,
+          promotion: 'q' // always promote to a queen for example simplicity
+        });
+
+        // update the position state upon successful move to trigger a re-render of the chessboard
+        setFen(chessGame.fen());
+
+        // make random cpu move after a short delay
+        setTimeout(makeRandomMove, 500);
+
+        // return true as the move was successful
+        return true;
+      } catch {
+        // return false as the move was not successful
+        return false;
+      }
+    }
+
+    // set the chessboard options
+    console.log({ fen })
+    const chessboardOptions = {
+      position: fen,
+      onPieceDrop,
+      // customSquareStyles: getSquareStyles(),
+      id: 'play-vs-random'
+    };
+
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -84,17 +199,10 @@ const ChessBoard = ({ pgn }) => {
         {/* Chess Board */}
         <div className="flex justify-center mb-6">
           <div className="w-96 h-96 chess-board-container">
-            <Chessboard
-              position={game.fen()}
-              onSquareClick={onSquareClick}
-              boardWidth={384}
-              arePiecesDraggable={false}
-              customBoardStyle={{
-                borderRadius: '4px',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-              }}
-              customSquareStyles={getSquareStyles()}
-            />
+          <Chessboard
+            options={chessboardOptions}
+          />
+
           </div>
         </div>
 
@@ -130,6 +238,21 @@ const ChessBoard = ({ pgn }) => {
           </button>
         </div>
 
+        {/* Slider Navigation */}
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-sm text-gray-600 font-roboto w-14 text-right">
+            {currentMoveIndex + 1}/{moveHistory.length}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={moveHistory.length}
+            value={currentMoveIndex + 1}
+            onChange={(e) => goToMove(Number(e.target.value) - 1)}
+            className="flex-1"
+          />
+        </div>
+
         {/* Move List */}
         <div className="max-h-40 overflow-y-auto">
           <h4 className="font-semibold mb-2 font-roboto">Moves:</h4>
@@ -152,14 +275,14 @@ const ChessBoard = ({ pgn }) => {
 
         {/* Game Status */}
         <div className="mt-4 text-center text-sm text-gray-600 font-roboto">
-          {game.isGameOver() ? (
+          {gameRef.current.isGameOver() ? (
             <span className="font-semibold">
-              Game Over - {game.isCheckmate() ? 'Checkmate' : 'Draw'}
+              Game Over - {gameRef.current.isCheckmate() ? 'Checkmate' : 'Draw'}
             </span>
           ) : (
             <span>
-              {game.turn() === 'w' ? 'White' : 'Black'} to move
-              {game.isCheck() && ' (Check)'}
+              {gameRef.current.turn() === 'w' ? 'White' : 'Black'} to move
+              {gameRef.current.isCheck() && ' (Check)'}
             </span>
           )}
         </div>
