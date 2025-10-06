@@ -78,10 +78,6 @@ const ChessBoard = ({ pgn }) => {
         }
       }
 
-      console.log({ game: base.fen() })
-
-
-
       gameRef.current = base;
       setFen(base.fen());
       setCurrentMoveIndex(moveIndex);
@@ -94,10 +90,6 @@ const ChessBoard = ({ pgn }) => {
   const goToEnd = useCallback(() => goToMove(moveHistory.length - 1), [goToMove, moveHistory.length]);
   const goToPrevious = useCallback(() => goToMove(currentMoveIndex - 1), [goToMove, currentMoveIndex]);
   const goToNext = useCallback(() => goToMove(currentMoveIndex + 1), [goToMove, currentMoveIndex]);
-
-  const umm = () => {
-    console.log(`umm`)
-  }
 
   // Keyboard navigation: Left/Right arrows
   useEffect(() => {
@@ -183,7 +175,6 @@ const ChessBoard = ({ pgn }) => {
     }
 
     // set the chessboard options
-    console.log({ fen })
     const chessboardOptions = {
       position: fen,
       onPieceDrop,
