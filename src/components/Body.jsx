@@ -11,10 +11,32 @@ const Body = () => {
   const [pgn, setPgn] = useState("");
 
   const validatePositionFromBoxes = () => {
-    const res = validatePosition(boxes)
-    console.log({ res })
-    setPgn(res.fullPGN)
-  }
+    const res = validatePosition(boxes);
+    console.log({ res });
+  
+    if (res.success) {
+      // All moves valid
+      setPgn(res.fullPGN);
+      setBoxes(prev => prev.map(b => ({ ...b, isError: false })));
+    } else {
+      console.warn(res.message);
+  
+      // ✅ Use partialPGN if available
+      if (res.partialPGN) {
+        setPgn(res.partialPGN);
+      }
+  
+      // Highlight the invalid move box
+      setBoxes(prev =>
+        prev.map(b =>
+          b.id === res.invalidBoxId
+            ? { ...b, isError: true }
+            : { ...b, isError: false }
+        )
+      );
+    }
+  };
+  
 
   return (
     <div className="container mx-auto pb-6 px-4">
@@ -34,7 +56,7 @@ const Body = () => {
         {imageUrl && boxes.length > 0 && (
           <div className="mt-6">
             <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes} validatePositionFromBoxes={validatePositionFromBoxes} />
-            <Hacks setBoxes={setBoxes} />
+            <Hacks boxes={boxes} setBoxes={setBoxes} />
           </div>
         )}
 

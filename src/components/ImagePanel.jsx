@@ -38,7 +38,7 @@ const ImagePanel = ({ imageUrl, boxes, setBoxes, validatePositionFromBoxes }) =>
         onClick={validatePositionFromBoxes}
         className="bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md px-3 py-1 transition-colors"
       >
-        Looks good!
+        Validate position
       </button>
     </div>
     

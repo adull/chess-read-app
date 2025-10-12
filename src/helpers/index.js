@@ -1,74 +1,56 @@
 import { Chess } from "chess.js";
 
-const _normalizeMove = (text) => {
-  if (!text) return "";
-  return text
-    .trim()
-    .replace(/!/g, "")
-    .replace(/\?/g, "")
-    .replace(/X/g, "x")
-    .replace(/[^a-zA-Z0-9=+#x-]/g, "")
-    .replace(/^([nbrqk])?([A-H])/, (_, piece, file) => {
-      // lowercase the file letter but not the piece
-      return (piece ? piece.toUpperCase() : "") + file.toLowerCase();
-    });
+// helper function to safely attempt a move
+const tryMove = (chess, moveText, box, color, moveIndex) => {
+  try {
+    const move = chess.move(moveText, { sloppy: true });
+    if (!move) {
+      return {
+        success: false,
+        invalidBoxId: box.id,
+        message: `Invalid ${color} move "${moveText}" at move ${moveIndex + 1}`,
+      };
+    }
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      invalidBoxId: box.id,
+      message: `Error parsing ${color} move "${moveText}" at move ${moveIndex + 1}: ${err.message}`,
+    };
+  }
 };
 
-const validatePosition = (boxes) => {
+export const validatePosition = (boxes) => {
   const chess = new Chess();
 
-  const moveMap = {};
+  // group into triples: [index, white, black]
   const moves = [];
-
   for (let i = 0; i < boxes.length; i += 3) {
-    const moveNumber = boxes[i]?.text?.replace(/\./g, "").trim();
-    const whiteMove = boxes[i + 1]?.text?.trim();
-    const blackMove = boxes[i + 2]?.text?.trim();
-
-    if (!moveNumber) continue;
-
-    moveMap[moveNumber] = { white: whiteMove || null, black: blackMove || null };
-    moves.push([whiteMove, blackMove]);
+    const moveNum = boxes[i];
+    const whiteBox = boxes[i + 1];
+    const blackBox = boxes[i + 2];
+    if (!moveNum) continue;
+    moves.push({ moveNum, whiteBox, blackBox });
   }
 
   for (let i = 0; i < moves.length; i++) {
-    const [whiteRaw, blackRaw] = moves[i];
-    // const white = _normalizeMove(whiteRaw);
-    // const black = _normalizeMove(blackRaw);
-    const white = whiteRaw
-    const black = blackRaw
+    const { whiteBox, blackBox } = moves[i];
 
-    if (white) {
-      const move = chess.move(white, { sloppy: true });
-      if (!move) {
-        return {
-          moveNumber: i + 1,
-          moveColor: "white",
-          moveText: whiteRaw,
-          message: `❌ Invalid white move "${whiteRaw}" at move ${i + 1}`,
-          partialPGN: chess.pgn(),
-        };
+    if (whiteBox?.text) {
+      const result = tryMove(chess, whiteBox.text, whiteBox, "white", i);
+      if (!result.success) {
+        return { ...result, partialPGN: chess.pgn() };
       }
     }
 
-    if (black) {
-      const move = chess.move(black, { sloppy: true });
-      if (!move) {
-        return {
-          moveNumber: i + 1,
-          moveColor: "black",
-          moveText: blackRaw,
-          message: `❌ Invalid black move "${blackRaw}" at move ${i + 1}`,
-          partialPGN: chess.pgn(),
-        };
+    if (blackBox?.text) {
+      const result = tryMove(chess, blackBox.text, blackBox, "black", i);
+      if (!result.success) {
+        return { ...result, partialPGN: chess.pgn() };
       }
     }
   }
 
-  return {
-    message: "✅ All moves are valid!",
-    fullPGN: chess.pgn(),
-  };
+  return { success: true, fullPGN: chess.pgn() };
 };
-
-export { validatePosition };
