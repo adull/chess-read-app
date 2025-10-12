@@ -1,11 +1,12 @@
 
 
 import { useEffect } from 'react';
-import axios from 'axios';
 
 import Header from './components/Header';
 import Body from './components/Body';
 import Footer from './components/Footer';
+import { SidebarProvider } from './components/sidebar/SidebarManager';
+import { ModalProvider } from './contexts/ModalContext';
 
 
 const App = () => {
@@ -13,11 +14,13 @@ const App = () => {
       console.log(`yerr`)
   }, []);
   return (
-    <>
-    <Header />
-    <Body />
-    <Footer />
-    </>
+    <ModalProvider>
+      <SidebarProvider>
+        <Header />
+        <Body />
+        <Footer />
+      </SidebarProvider>
+    </ModalProvider>
   );
 }
 

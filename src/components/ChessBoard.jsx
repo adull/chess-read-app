@@ -4,7 +4,7 @@ import { Chessboard } from 'react-chessboard';
 
 const INIT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
-const ChessBoard = ({ pgn }) => {
+const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = true }) => {
   const gameRef = useRef(new Chess());
   const [fen, setFen] = useState(INIT_FEN);
   const [moveHistory, setMoveHistory] = useState([]);
@@ -14,25 +14,25 @@ const ChessBoard = ({ pgn }) => {
   const chessGame = gameRef.current
 
   // Generate square styles programmatically - much cleaner than hardcoding
-  const getSquareStyles = () => {
-    const styles = {};
-    const lightColor = '#ffffff';
-    const darkColor = '#000000';
-    
-    // Generate all 64 squares using a simple loop
-    for (let file = 0; file < 8; file++) {
-      for (let rank = 0; rank < 8; rank++) {
-        const square = String.fromCharCode(97 + file) + (8 - rank);
-        const isLight = (file + rank) % 2 === 0;
-        styles[square] = {
-          backgroundColor: isLight ? lightColor : darkColor
-        };
-      }
-    }
-    
-    // console.log({ styles })
-    return styles;
-  };
+  // const getSquareStyles = () => {
+  //   const styles = {};
+  //   const lightColor = '#ffffff';
+  //   const darkColor = '#000000';
+  //   
+  //   // Generate all 64 squares using a simple loop
+  //   for (let file = 0; file < 8; file++) {
+  //     for (let rank = 0; rank < 8; rank++) {
+  //       const square = String.fromCharCode(97 + file) + (8 - rank);
+  //       const isLight = (file + rank) % 2 === 0;
+  //       styles[square] = {
+  //         backgroundColor: isLight ? lightColor : darkColor
+  //       };
+  //     }
+  //   }
+  //   
+  //   // console.log({ styles })
+  //   return styles;
+  // };
 
 
   useEffect(() => {
@@ -46,27 +46,30 @@ const ChessBoard = ({ pgn }) => {
       console.log({ initialFen})
 
       setStartFen(initialFen);
-      setMoveHistory(parsed.history());
+      const history = parsed.history();
+      setMoveHistory(history);
 
       // Initialize board to end position by default
       const endGame = initialFen === 'start' ? new Chess() : new Chess(initialFen);
-      for (const san of parsed.history()) {
+      for (const san of history) {
         endGame.move(san);
       }
       gameRef.current = endGame
-      console.log({ moveHistory})
-      setFen(INIT_FEN)
-      setCurrentMoveIndex(-1);
+      console.log({ g: gameRef.current})
+      console.log({ moveHistory: history})
+      setFen(gameRef.current.fen())
+      // setCurrentMoveIndex());
     } catch (error) {
       console.error('Error loading PGN:', error);
     }
   }, [pgn]);
 
-  const onSquareClick = (square) => {
-    console.log({ square })
-  };
+  // const onSquareClick = (square) => {
+  //   console.log({ square })
+  // };
 
   const goToMove = useCallback((moveIndex) => {
+    console.log(`go to move ${moveIndex}`)
     if (moveIndex < -1 || moveIndex >= moveHistory.length) return;
 
     try {
@@ -147,6 +150,11 @@ const ChessBoard = ({ pgn }) => {
       sourceSquare,
       targetSquare
     }) {
+      // If external onPieceDrop is provided, use it instead
+      if (externalOnPieceDrop) {
+        return externalOnPieceDrop(sourceSquare, targetSquare);
+      }
+
       // type narrow targetSquare potentially being null (e.g. if dropped off board)
       if (!targetSquare) {
         return false;
@@ -197,72 +205,76 @@ const ChessBoard = ({ pgn }) => {
           </div>
         </div>
 
-        {/* Move Navigation Controls */}
-        <div className="flex justify-center gap-2 mb-4">
-          <button
-            onClick={goToStart}
-            disabled={currentMoveIndex === -1}
-            className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
-          >
-            Start
-          </button>
-          <button
-            onClick={goToPrevious}
-            disabled={currentMoveIndex <= -1}
-            className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
-          >
-            Previous
-          </button>
-          <button
-            onClick={goToNext}
-            disabled={currentMoveIndex >= moveHistory.length - 1}
-            className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
-          >
-            Next
-          </button>
-          <button
-            onClick={goToEnd}
-            disabled={currentMoveIndex === moveHistory.length - 1}
-            className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
-          >
-            End
-          </button>
-        </div>
-
-        {/* Slider Navigation */}
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-sm text-gray-600 font-roboto w-14 text-right">
-            {currentMoveIndex + 1}/{moveHistory.length}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={moveHistory.length}
-            value={currentMoveIndex + 1}
-            onChange={(e) => goToMove(Number(e.target.value) - 1)}
-            className="flex-1"
-          />
-        </div>
-
-        {/* Move List */}
-        <div className="max-h-40 overflow-y-auto">
-          <h4 className="font-semibold mb-2 font-roboto">Moves:</h4>
-          <div className="grid grid-cols-2 gap-1 text-sm">
-            {moveHistory.map((move, index) => (
+        {showMoveHistory && (
+          <>
+            {/* Move Navigation Controls */}
+            <div className="flex justify-center gap-2 mb-4">
               <button
-                key={index}
-                onClick={() => goToMove(index)}
-                className={`p-2 text-left rounded font-roboto ${
-                  index === currentMoveIndex
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'hover:bg-gray-100'
-                }`}
+                onClick={goToStart}
+                disabled={currentMoveIndex === -1}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
               >
-                {index + 1}. {move}
+                Start
               </button>
-            ))}
-          </div>
-        </div>
+              <button
+                onClick={goToPrevious}
+                disabled={currentMoveIndex <= -1}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
+              >
+                Previous
+              </button>
+              <button
+                onClick={goToNext}
+                disabled={currentMoveIndex >= moveHistory.length - 1}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
+              >
+                Next
+              </button>
+              <button
+                onClick={goToEnd}
+                disabled={currentMoveIndex === moveHistory.length - 1}
+                className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
+              >
+                End
+              </button>
+            </div>
+
+            {/* Slider Navigation */}
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-sm text-gray-600 font-roboto w-14 text-right">
+                {currentMoveIndex + 1}/{moveHistory.length}
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={moveHistory.length}
+                value={currentMoveIndex + 1}
+                onChange={(e) => goToMove(Number(e.target.value) - 1)}
+                className="flex-1"
+              />
+            </div>
+
+            {/* Move List */}
+            <div className="max-h-40 overflow-y-auto">
+              <h4 className="font-semibold mb-2 font-roboto">Moves:</h4>
+              <div className="grid grid-cols-2 gap-1 text-sm">
+                {moveHistory.map((move, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToMove(index)}
+                    className={`p-2 text-left rounded font-roboto ${
+                      index === currentMoveIndex
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    {index + 1}. {move}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Game Status */}
         <div className="mt-4 text-center text-sm text-gray-600 font-roboto">

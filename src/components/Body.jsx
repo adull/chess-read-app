@@ -1,62 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import UploadPanel from "./UploadPanel";
 import ImagePanel from "./ImagePanel";
 import ChessBoard from "./ChessBoard";
-import Hacks from './Hacks'
-import { validatePosition } from '../helpers'
+import { useSidebar } from "./sidebar/SidebarManager";
+import { useModal } from "../contexts/ModalContext";
+import { useChessAnalyzer } from "../hooks/useChessAnalyzer";
 
 const Body = () => {
-  const [imageUrl, setImageUrl] = useState(null);
-  const [boxes, setBoxes] = useState([]);
-  const [pgn, setPgn] = useState("");
 
-  const validatePositionFromBoxes = () => {
-    const res = validatePosition(boxes);
-    console.log({ res });
-  
-    if (res.success) {
-      // All moves valid
-      setPgn(res.fullPGN);
-      setBoxes(prev => prev.map(b => ({ ...b, isError: false })));
-    } else {
-      console.warn(res.message);
-  
-      // ✅ Use partialPGN if available
-      if (res.partialPGN) {
-        setPgn(res.partialPGN);
-      }
-  
-      // Highlight the invalid move box
-      setBoxes(prev =>
-        prev.map(b =>
-          b.id === res.invalidBoxId
-            ? { ...b, isError: true }
-            : { ...b, isError: false }
-        )
-      );
-    }
-  };
-  
+  const { addPanel, findPanel } = useSidebar()
+  const { openModal } = useModal()
+
+  const {
+    imageUrl,
+    setImageUrl,
+    boxes,
+    setBoxes,
+    pgn,
+    validatePositionFromBoxes,
+  } = useChessAnalyzer({ addPanel, findPanel, openModal });
 
   return (
     <div className="container mx-auto pb-6 px-4">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-center mb-8 font-roboto">
-          Chess Position Analyzer
-        </h2>
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-bold font-roboto">
+            Chess Position Analyzer
+          </h2>
+        </div>
 
         <UploadPanel
           onImageChange={(url) => setImageUrl(url)}
           onResult={(data) => {
             setBoxes(data.boxes || []);
-            setPgn(data.pgn || "");
           }}
         />
 
         {imageUrl && boxes.length > 0 && (
           <div className="mt-6">
             <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes} validatePositionFromBoxes={validatePositionFromBoxes} />
-            <Hacks boxes={boxes} setBoxes={setBoxes} />
           </div>
         )}
 

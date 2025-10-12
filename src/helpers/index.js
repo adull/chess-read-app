@@ -8,6 +8,7 @@ const tryMove = (chess, moveText, box, color, moveIndex) => {
       return {
         success: false,
         invalidBoxId: box.id,
+        problemMove: moveText,
         message: `Invalid ${color} move "${moveText}" at move ${moveIndex + 1}`,
       };
     }
@@ -16,6 +17,7 @@ const tryMove = (chess, moveText, box, color, moveIndex) => {
     return {
       success: false,
       invalidBoxId: box.id,
+      problemMove: moveText,
       message: `Error parsing ${color} move "${moveText}" at move ${moveIndex + 1}: ${err.message}`,
     };
   }
@@ -38,6 +40,7 @@ export const validatePosition = (boxes) => {
     const { whiteBox, blackBox } = moves[i];
 
     if (whiteBox?.text) {
+        console.log({t: whiteBox.text})
       const result = tryMove(chess, whiteBox.text, whiteBox, "white", i);
       if (!result.success) {
         return { ...result, partialPGN: chess.pgn() };
