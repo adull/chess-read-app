@@ -17,6 +17,7 @@ const Body = () => {
     boxes,
     setBoxes,
     pgn,
+    setPgn,
     validatePositionFromBoxes,
   } = useChessAnalyzer({ addPanel, findPanel, openModal });
 
@@ -33,6 +34,7 @@ const Body = () => {
           onImageChange={(url) => setImageUrl(url)}
           onResult={(data) => {
             setBoxes(data.boxes || []);
+            setPgn(data.pgn || "");
           }}
         />
 
