@@ -3,11 +3,18 @@ import UploadPanel from "./UploadPanel";
 import ImagePanel from "./ImagePanel";
 import ChessBoard from "./ChessBoard";
 import Hacks from './Hacks'
+import { validatePosition } from '../helpers'
 
 const Body = () => {
   const [imageUrl, setImageUrl] = useState(null);
   const [boxes, setBoxes] = useState([]);
   const [pgn, setPgn] = useState("");
+
+  const validatePositionFromBoxes = () => {
+    const res = validatePosition(boxes)
+    console.log({ res })
+    setPgn(res.fullPGN)
+  }
 
   return (
     <div className="container mx-auto pb-6 px-4">
@@ -26,7 +33,7 @@ const Body = () => {
 
         {imageUrl && boxes.length > 0 && (
           <div className="mt-6">
-            <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes}/>
+            <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes} validatePositionFromBoxes={validatePositionFromBoxes} />
             <Hacks setBoxes={setBoxes} />
           </div>
         )}

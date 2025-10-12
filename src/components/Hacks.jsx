@@ -4,40 +4,47 @@ import { v4 as uuidv4 } from "uuid";
 export default function Hacks({ setBoxes }) {
   const handleAlmostPerfect = () => {
     const moves = [
-      ["E4", "E5"],
-      ["NC3", "F6"],
-      ["BC4", "NC5"],
-      ["NF3", "BC5"],
-      ["NA4", "NA5"],
-      ["BXG8", "BXF2"],
-      ["KXF2", "RXG8"],
-      ["D4", "NC6"],
-      ["DXE5", "NXE5"],
-      ["NXE5", "FXE5"],
-      ["QH5!", "G6"],
-      ["QH7", "QF6"],
-      ["E6", "QF8"],
-      ["QXG6", "KD8"],
-      ["QG5!", "QE7"],
-      ["QXF4", "D6"],
-      ["EXD6", "CXD6"],
-      ["RE1", "QD7"],
-      ["QF6", "KC7"],
-      ["RE7", ""],
-    ];
+        ["e4", "e5"],
+        ["Nc3", "f6"],
+        ["Bc4", "Nc6"],
+        ["Nf3", "Bc5"],
+        ["Na4", "Na5"],
+        ["Bxg8", "Bxf2+"],
+        ["Kxf2", "Rxg8"],
+        ["d4", "Nc6"],
+        ["dxe5", "Nxe5"],
+        ["Nxe5", "fxe5"],
+        ["Rf1", "Rf8"],
+        // ["Kg1", "Rg4"],
+        // ["Bg4", "fxg4"],
+        // ["Qh5", "g6"],
+        // ["Qh7", "Qf6"],
+        // ["e6", "Qf8"],
+        // ["Qxg6", "Kd8"],
+        // ["Qg5", "Qe7"],
+        // ["Qxf4", "d6"],
+        // ["exd6", "cxd6"],
+        // ["Re1", "Qd7"],
+        // ["Qf6", "Kc7"],
+        // ["Re7", ""],
+      ];      
 
     // layout configuration
-    const baseTop = 20; // start lower (~500px down if total height ≈ 2500px)
-    const rowGap = 4.2; // spacing between rows (%)
-    const numCol = 8; // move numbers column
-    const whiteCol = 20; // "Adlai White"
-    const blackCol = 58; // "Danielle Black"
+    const startTop = 24;   // a little lower (roughly below headers)
+    const endBottom = 90;  // stop ~5% from bottom
+    const numMoves = moves.length;
+    const totalSpan = endBottom - startTop;
+    const rowGap = totalSpan / (numMoves - 1);
+
+    const numCol = 8;      // move numbers
+    const whiteCol = 20;   // "Adlai White"
+    const blackCol = 58;   // "Danielle Black"
     const boxW = 8;
-    const boxH = 3.2;
+    const boxH = 3;
 
     const boxes = moves.flatMap((pair, i) => {
       const [white, black] = pair;
-      const y = baseTop + i * rowGap;
+      const y = startTop + i * rowGap;
       const moveNum = `${i + 1}.`;
 
       const rowBoxes = [

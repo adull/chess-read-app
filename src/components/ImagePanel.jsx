@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from "react";
 import Box from "./Box";
 
-const ImagePanel = ({ imageUrl, boxes, setBoxes }) => {
+const ImagePanel = ({ imageUrl, boxes, setBoxes, validatePositionFromBoxes }) => {
   const [activeBoxId, setActiveBoxId] = useState(null);
   const containerRef = useRef(null); // <-- important
 
@@ -34,7 +34,14 @@ const ImagePanel = ({ imageUrl, boxes, setBoxes }) => {
           containerRef={containerRef}
         />
       ))}
+      <button
+        onClick={validatePositionFromBoxes}
+        className="bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md px-3 py-1 transition-colors"
+      >
+        Looks good!
+      </button>
     </div>
+    
   );
 };
 
