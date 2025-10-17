@@ -192,7 +192,7 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
         setFen(chessGame.fen());
 
         // make random cpu move after a short delay
-        setTimeout(makeRandomMove, 500);
+        // setTimeout(makeRandomMove, 500);
 
         // return true as the move was successful
         return true;

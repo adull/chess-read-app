@@ -45,6 +45,7 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
       
         modalId = openModal(PromotionChoice, 'promotion-choice', { color: movePiece.color, choosePiece });
       }
+      console.log(`dropped`)
       const move = chess.move({
         from: sourceSquare,
         to: targetSquare,
@@ -60,6 +61,7 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
           moveIndex: currentMoveIndex + 1
         });
         setIsWaitingForConfirmation(true);
+        updatePgn(chess)
         return true;
       }
     } catch (error) {
@@ -147,6 +149,21 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
     } catch (error) {
       console.error('Error navigating to move:', error);
     }
+  };
+
+  const updatePgn = (chess) => {
+    const newPgn = chess.pgn();
+    const moveHistory = chess.history({ verbose: true });
+  
+    const movesWithValidity = moveHistory.map(move => ({
+      move: move.san,
+      from: move.from,
+      to: move.to,
+      isValid: true
+    }));
+  
+    setCurrentPgn(newPgn);
+    setMoveHistory(movesWithValidity);
   };
 
   return (
@@ -242,8 +259,8 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
 
       {/* Instructions */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="text-sm font-semibold text-blue-800 mb-2">Instructions:</h4>
-        <ul className="text-xs text-blue-700 space-y-1">
+        <h4 className="text-md font-semibold text-blue-800 mb-2">Instructions:</h4>
+        <ul className="text-sm text-blue-700 space-y-1">
           <li>• Click "Start Position" to go back to the initial position</li>
           <li>• Click on any move in the history to navigate to that position</li>
           <li>• Make moves on the chessboard to suggest corrections</li>

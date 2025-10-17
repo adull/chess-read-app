@@ -4,7 +4,7 @@ import ImagePanel from "./ImagePanel";
 import ChessBoard from "./ChessBoard";
 import { useSidebar } from "./sidebar/SidebarManager";
 import { useModal } from "../contexts/ModalContext";
-import { useChessAnalyzer } from "../hooks/useChessAnalyzer";
+import { useChessData } from "../hooks/useChessData";
 
 const Body = () => {
 
@@ -12,14 +12,11 @@ const Body = () => {
   const { openModal } = useModal()
 
   const {
-    imageUrl,
-    setImageUrl,
-    boxes,
-    setBoxes,
-    pgn,
-    setPgn,
+    imageUrl, setImageUrl,
+    boxes, setBoxes,
+    pgn, setPgn,
     validatePositionFromBoxes,
-  } = useChessAnalyzer({ addPanel, findPanel, openModal });
+  } = useChessData({ addPanel, findPanel, openModal });
 
   return (
     <div className="container mx-auto pb-6 px-4">

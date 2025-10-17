@@ -2,7 +2,7 @@ import { Chess } from 'chess.js';
 import { useState, useEffect, useCallback } from "react";
 import { validatePosition } from "../helpers";
 
-export function useChessAnalyzer({ addPanel, findPanel, openModal }) {
+export function useChessData({ addPanel, findPanel, openModal }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [boxes, setBoxes] = useState([]);
   const [pgn, setPgn] = useState("");
