@@ -1,3 +1,4 @@
+import { Chess } from 'chess.js';
 import { useState, useEffect, useCallback } from "react";
 import { validatePosition } from "../helpers";
 
@@ -23,7 +24,16 @@ export function useChessAnalyzer({ addPanel, findPanel, openModal }) {
     }
 
     if (res.partialPGN) {
+      const chess = new Chess();
+      console.log({ res })
       setPgn(res.partialPGN);
+      chess.loadPgn(res.partialPGN)
+      const moves = chess.history();
+      // console.log({ moves })
+      const movesWithValidity = moves.map(move => ({ move, isValid: true }))
+      movesWithValidity.push({move: res.problemMove, isValid: false })
+      // const invalidMoveIndex = res.invalidBoxId ? Math.floor(res.invalidBoxId / 3) : -1
+
 
       import("../components/sidebar/ValidationErrorPanel").then(({ default: ValidationErrorPanel }) => {
         addPanel("validation-error", ValidationErrorPanel, {
@@ -33,9 +43,8 @@ export function useChessAnalyzer({ addPanel, findPanel, openModal }) {
               openModal(InteractiveEditor, "interactive-editor", {
                 size: "large",
                 initialPgn: res.partialPGN,
-                invalidMoveIndex: res.invalidBoxId
-                  ? Math.floor(res.invalidBoxId / 3)
-                  : -1,
+                moves: movesWithValidity,
+                problemMove: res.problemMove,
                 onMoveUpdate: (moveData) => {
                   console.log("Move updated:", moveData);
                 },

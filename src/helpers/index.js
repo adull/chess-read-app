@@ -23,6 +23,13 @@ const tryMove = (chess, moveText, box, color, moveIndex) => {
   }
 };
 
+export const isPromotionMove = (piece, targetSquare) => {
+  return (
+    piece.toLowerCase() === 'p' &&
+    (targetSquare[1] === '8' || targetSquare[1] === '1')
+  );
+};
+
 export const validatePosition = (boxes) => {
   const chess = new Chess();
 

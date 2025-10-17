@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import ChessBoard from '../ChessBoard';
+import MoveButton from '../MoveButton';
+import PromotionChoice from './PromotionChoice';
+import { useModal } from "../../contexts/ModalContext";
+import { isPromotionMove } from '../../helpers';
 
-const InteractiveEditor = ({ onClose, initialPgn, onMoveUpdate, invalidMoveIndex }) => {
+const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
+  console.log({ moves })
   const [chess, setChess] = useState(new Chess());
-  const [moveHistory, setMoveHistory] = useState([]);
+  const [moveHistory, setMoveHistory] = useState(moves);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [pendingMove, setPendingMove] = useState(null);
   const [isWaitingForConfirmation, setIsWaitingForConfirmation] = useState(false);
   const [currentPgn, setCurrentPgn] = useState('');
+  const [promotionChoice, setPromotionChoice] = useState('q');
+
+  const { openModal, closeModal } = useModal()
 
   useEffect(() => {
     if (initialPgn) {
@@ -16,7 +24,7 @@ const InteractiveEditor = ({ onClose, initialPgn, onMoveUpdate, invalidMoveIndex
         const newChess = new Chess();
         newChess.loadPgn(initialPgn);
         setChess(newChess);
-        setMoveHistory(newChess.history());
+        // setMoveHistory(newChess.history());
         setCurrentMoveIndex(newChess.history().length - 1);
         setCurrentPgn(initialPgn);
       } catch (error) {
@@ -25,13 +33,24 @@ const InteractiveEditor = ({ onClose, initialPgn, onMoveUpdate, invalidMoveIndex
     }
   }, [initialPgn]);
 
-  const handlePieceDrop = (sourceSquare, targetSquare) => {
+  const handlePieceDrop = (sourceSquare, targetSquare, movePiece) => {
     try {
+      if (isPromotionMove(movePiece.type, targetSquare)) {
+        let modalId;
+      
+        const choosePiece = (choice) => {
+          setPromotionChoice(choice);
+          closeModal(modalId);
+        };
+      
+        modalId = openModal(PromotionChoice, 'promotion-choice', { color: movePiece.color, choosePiece });
+      }
       const move = chess.move({
         from: sourceSquare,
         to: targetSquare,
-        promotion: 'q' // Default to queen promotion
+        promotion: promotionChoice
       });
+      setPromotionChoice('q')
 
       if (move) {
         setPendingMove({
@@ -168,21 +187,14 @@ const InteractiveEditor = ({ onClose, initialPgn, onMoveUpdate, invalidMoveIndex
           <div className="max-h-80 overflow-y-auto">
             <div className="grid grid-cols-2 gap-2 text-sm">
               {moveHistory.map((move, index) => (
-                <button
+                <MoveButton
                   key={index}
-                  onClick={() => goToMove(index)}
-                  className={`p-3 rounded text-left transition-colors ${
-                    index === currentMoveIndex
-                      ? 'bg-blue-200 text-blue-800 border-2 border-blue-400'
-                      : index === invalidMoveIndex
-                      ? 'bg-red-200 text-red-800 border-2 border-red-400'
-                      : 'bg-white hover:bg-gray-100 border border-gray-200'
-                  }`}
-                >
-                  <span className="font-mono font-semibold">
-                    {Math.floor(index / 2) + 1}. {move}
-                  </span>
-                </button>
+                  move={move}
+                  index={index}
+                  currentMoveIndex={currentMoveIndex}
+                  onSelect={goToMove}
+                  onEdit={(i) => console.log("Edit move:", i)}
+                />
               ))}
             </div>
           </div>

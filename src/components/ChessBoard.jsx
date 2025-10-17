@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import PromotionChoice from './modals/PromotionChoice';
+import { useModal } from '../contexts/ModalContext';
+import { isPromotionMove } from '../helpers';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 
@@ -10,6 +13,8 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
   const [moveHistory, setMoveHistory] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [startFen, setStartFen] = useState('start');
+  const [promotionChoice, setPromotionChoice] = useState('q')
+  const { openModal, closeModal } = useModal();
 
   const chessGame = gameRef.current
 
@@ -150,9 +155,12 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
       sourceSquare,
       targetSquare
     }) {
-      // If external onPieceDrop is provided, use it instead
+      console.log({ sourceSquare, targetSquare})
+      const movePiece = chessGame.get(sourceSquare);
+      console.log({ movePiece })
+
       if (externalOnPieceDrop) {
-        return externalOnPieceDrop(sourceSquare, targetSquare);
+        return externalOnPieceDrop(sourceSquare, targetSquare, movePiece);
       }
 
       // type narrow targetSquare potentially being null (e.g. if dropped off board)
@@ -160,12 +168,24 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
         return false;
       }
 
-      // try to make the move according to chess.js logic
+      if (isPromotionMove(movePiece.type, targetSquare)) {
+        let modalId;
+      
+        const choosePiece = (choice) => {
+          console.log({ choice })
+          setPromotionChoice(choice);
+          closeModal(modalId);
+        };
+      
+        modalId = openModal(PromotionChoice, 'promotion-choice', { color: movePiece.color, choosePiece });
+      }
+      // try to make the move according to chess.js logig
       try {
+        console.log({ promotionChoice})
         chessGame.move({
           from: sourceSquare,
           to: targetSquare,
-          promotion: 'q' // always promote to a queen for example simplicity
+          promotion: promotionChoice
         });
 
         // update the position state upon successful move to trigger a re-render of the chessboard
