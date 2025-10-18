@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import PromotionChoice from './modals/PromotionChoice';
-import { useModal } from '../contexts/ModalContext';
+import { useModal } from '../hooks/useModal';
 import { isPromotionMove } from '../helpers';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+
+import PromotionChoice from './modals/PromotionChoice';
 
 const INIT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
@@ -155,9 +156,7 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
       sourceSquare,
       targetSquare
     }) {
-      console.log({ sourceSquare, targetSquare})
       const movePiece = chessGame.get(sourceSquare);
-      console.log({ movePiece })
 
       if (externalOnPieceDrop) {
         return externalOnPieceDrop(sourceSquare, targetSquare, movePiece);
@@ -181,7 +180,6 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
       }
       // try to make the move according to chess.js logig
       try {
-        console.log({ promotionChoice})
         chessGame.move({
           from: sourceSquare,
           to: targetSquare,

@@ -3,20 +3,33 @@ import UploadPanel from "./UploadPanel";
 import ImagePanel from "./ImagePanel";
 import ChessBoard from "./ChessBoard";
 import { useSidebar } from "./sidebar/SidebarManager";
-import { useModal } from "../contexts/ModalContext";
-import { useChessData } from "../hooks/useChessData";
+import { useModal } from "../hooks/useModal";
+import { useChess } from "../hooks/useChess";
 
 const Body = () => {
+  const [imageUrl, setImageUrl] = useState('')
+  const [pgn, setPgn] = useState('')
 
   const { addPanel, findPanel } = useSidebar()
   const { openModal } = useModal()
+  const { boxes, setBoxes, parseAndValidate } = useChess()
 
-  const {
-    imageUrl, setImageUrl,
-    boxes, setBoxes,
-    pgn, setPgn,
-    validatePositionFromBoxes,
-  } = useChessData({ addPanel, findPanel, openModal });
+  useEffect(() => {
+    if (boxes.length > 0 && !findPanel("hacks")) {
+      import("../components/sidebar/Hacks").then(({ default: Hacks }) => {
+        addPanel("hacks", Hacks, { boxes, setBoxes });
+      });
+    }
+  }, [boxes, setBoxes, addPanel, findPanel]);
+  
+
+  // const {
+  //   imageUrl, setImageUrl,
+  //   boxes, setBoxes,
+  //   pgn, setPgn,
+  //   validatePositionFromBoxes,
+  // } = useChessData({ addPanel, findPanel, openModal });
+
 
   return (
     <div className="container mx-auto pb-6 px-4">
@@ -31,13 +44,18 @@ const Body = () => {
           onImageChange={(url) => setImageUrl(url)}
           onResult={(data) => {
             setBoxes(data.boxes || []);
-            setPgn(data.pgn || "");
           }}
         />
 
         {imageUrl && boxes.length > 0 && (
           <div className="mt-6">
-            <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes} validatePositionFromBoxes={validatePositionFromBoxes} />
+            <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes} />
+            <button
+              onClick={parseAndValidate}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-md rounded-md px-3 py-1 transition-colors"
+            >
+              Validate position
+            </button>
           </div>
         )}
 

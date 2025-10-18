@@ -3,11 +3,13 @@ import { Chess } from 'chess.js';
 import ChessBoard from '../ChessBoard';
 import MoveButton from '../MoveButton';
 import PromotionChoice from './PromotionChoice';
-import { useModal } from "../../contexts/ModalContext";
+import { useModal } from "../../hooks/useModal";
 import { isPromotionMove } from '../../helpers';
+import { useChess } from "../../hooks/useChess";
 
-const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
-  console.log({ moves })
+
+const InteractiveEditor = ({ onClose, pgn, moves, problemBox, onMoveUpdate }) => {
+  const { updateBox } = useChess();
   const [chess, setChess] = useState(new Chess());
   const [moveHistory, setMoveHistory] = useState(moves);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
@@ -19,19 +21,19 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
   const { openModal, closeModal } = useModal()
 
   useEffect(() => {
-    if (initialPgn) {
+    if (pgn) {
       try {
         const newChess = new Chess();
-        newChess.loadPgn(initialPgn);
+        newChess.loadPgn(pgn);
         setChess(newChess);
         // setMoveHistory(newChess.history());
         setCurrentMoveIndex(newChess.history().length - 1);
-        setCurrentPgn(initialPgn);
+        setCurrentPgn(pgn);
       } catch (error) {
         console.error('Error loading PGN:', error);
       }
     }
-  }, [initialPgn]);
+  }, [pgn]);
 
   const handlePieceDrop = (sourceSquare, targetSquare, movePiece) => {
     try {
@@ -72,6 +74,7 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
 
   const confirmMove = () => {
     if (pendingMove && onMoveUpdate) {
+      console.log({problemBox})
       onMoveUpdate(pendingMove);
     }
     setPendingMove(null);
@@ -92,9 +95,9 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
       if (index === -1) {
         const initialChess = new Chess();
         // Don't load the full PGN, just get the initial position
-        if (initialPgn) {
+        if (pgn) {
           const tempChess = new Chess();
-          tempChess.loadPgn(initialPgn);
+          tempChess.loadPgn(pgn);
           // Get the initial FEN from the PGN headers
           const headers = tempChess.header();
           const initialFen = headers?.SetUp === '1' && headers?.FEN ? headers.FEN : 'start';
@@ -112,9 +115,9 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
       const positionChess = new Chess();
       
       // Get the initial position from the PGN
-      if (initialPgn) {
+      if (pgn) {
         const tempChess = new Chess();
-        tempChess.loadPgn(initialPgn);
+        tempChess.loadPgn(pgn);
         const headers = tempChess.header();
         const initialFen = headers?.SetUp === '1' && headers?.FEN ? headers.FEN : 'start';
         if (initialFen !== 'start') {
@@ -124,7 +127,7 @@ const InteractiveEditor = ({ onClose, initialPgn, moves, onMoveUpdate }) => {
       
       // Get all moves from the original PGN
       const tempChess = new Chess();
-      tempChess.loadPgn(initialPgn);
+      tempChess.loadPgn(pgn);
       const allMoves = tempChess.history();
       
       // Apply moves up to the selected position

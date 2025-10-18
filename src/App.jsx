@@ -7,6 +7,7 @@ import Body from './components/Body';
 import Footer from './components/Footer';
 import { SidebarProvider } from './components/sidebar/SidebarManager';
 import { ModalProvider } from './contexts/ModalContext';
+import { ChessProvider } from './contexts/ChessContext';
 
 
 const App = () => {
@@ -16,9 +17,11 @@ const App = () => {
   return (
     <ModalProvider>
       <SidebarProvider>
-        <Header />
-        <Body />
-        <Footer />
+        <ChessProvider>
+          <Header />
+          <Body />
+          <Footer />
+        </ChessProvider>
       </SidebarProvider>
     </ModalProvider>
   );

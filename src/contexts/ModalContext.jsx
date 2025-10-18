@@ -1,7 +1,7 @@
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, createContext } from 'react';
 import { v4 as uuidv4 } from "uuid";
 
-const ModalContext = createContext();
+export const ModalContext = createContext();
 
 export const ModalProvider = ({ children }) => {
     const [modals, setModals] = useState([]);
@@ -81,12 +81,4 @@ export const ModalProvider = ({ children }) => {
             ))}
         </ModalContext.Provider>
     );
-};
-
-export const useModal = () => {
-    const context = useContext(ModalContext);
-    if (!context) {
-        throw new Error('useModal must be used within a ModalProvider');
-    }
-    return context;
 };
