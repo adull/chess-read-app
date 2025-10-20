@@ -1,6 +1,7 @@
 import React from 'react';
 
-const ValidationErrorPanel = ({ onClose, validationError, onOpenEditor }) => {
+const ValidationErrorPanel = ({ onClose, problemBox, onOpenEditor }) => {
+  console.log({ problemBox})
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-between items-center">
@@ -19,7 +20,7 @@ const ValidationErrorPanel = ({ onClose, validationError, onOpenEditor }) => {
       
       <div className="bg-red-50 border border-red-200 rounded-lg p-3">
         <p className="text-sm text-red-800 mb-2">
-          <strong>Error:</strong> {validationError.message}
+          <strong>Error:</strong> {problemBox.error}
         </p>
         <p className="text-xs text-red-600">
           The move sequence is valid up to this point, but the next move is invalid.

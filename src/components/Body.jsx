@@ -5,6 +5,8 @@ import ChessBoard from "./ChessBoard";
 import { useSidebar } from "./sidebar/SidebarManager";
 import { useModal } from "../hooks/useModal";
 import { useChess } from "../hooks/useChess";
+import { cheatMoves } from "../const";
+import { setupBoxesWithCheatMoves } from "../helpers";
 
 const Body = () => {
   const [imageUrl, setImageUrl] = useState('')
@@ -12,7 +14,7 @@ const Body = () => {
 
   const { addPanel, findPanel } = useSidebar()
   const { openModal } = useModal()
-  const { boxes, setBoxes, parseAndValidate } = useChess()
+  const { boxes, derived, setBoxes, parseAndValidate } = useChess()
 
   useEffect(() => {
     if (boxes.length > 0 && !findPanel("hacks")) {
@@ -29,6 +31,28 @@ const Body = () => {
   //   pgn, setPgn,
   //   validatePositionFromBoxes,
   // } = useChessData({ addPanel, findPanel, openModal });
+  const validateAndUpdateUi = () => {
+    parseAndValidate()
+
+    console.log({ boxes, derived})
+    if(!derived.success && derived.problemBox) {
+      import("../components/sidebar/ValidationErrorPanel").then(({ default: ValidationErrorPanel }) => {
+        addPanel("hacks", ValidationErrorPanel, { problemBox: derived.problemBox, onOpenEditor: async() => {
+          const { default: InteractiveEditor } = await import("../components/modals/InteractiveEditor");
+          openModal(InteractiveEditor, "interactive-editor", {
+            size: "large"
+          })
+        } });
+      });
+
+    }
+  }
+
+  const setup = () => {
+    setImageUrl('/clean.jpeg')
+    setupBoxesWithCheatMoves(cheatMoves, setBoxes)
+    
+  }
 
 
   return (
@@ -40,6 +64,10 @@ const Body = () => {
           </h2>
         </div>
 
+        <button
+              onClick={setup}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-md rounded-md px-3 py-1 transition-colors"
+            >Set up </button>
         <UploadPanel
           onImageChange={(url) => setImageUrl(url)}
           onResult={(data) => {
@@ -49,13 +77,14 @@ const Body = () => {
 
         {imageUrl && boxes.length > 0 && (
           <div className="mt-6">
-            <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes} />
             <button
-              onClick={parseAndValidate}
+              onClick={validateAndUpdateUi}
               className="bg-blue-600 hover:bg-blue-700 text-white text-md rounded-md px-3 py-1 transition-colors"
             >
               Validate position
             </button>
+            <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes} />
+            
           </div>
         )}
 

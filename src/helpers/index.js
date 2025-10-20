@@ -1,4 +1,5 @@
 import { Chess } from "chess.js";
+import { v4 as uuidv4 } from "uuid"
 
 // helper function to safely attempt a move
 export const tryMove = (chess, moveText, box, color, moveIndex) => {
@@ -65,7 +66,7 @@ export const validatePosition = (boxes) => {
   return { success: true, fullPGN: chess.pgn() };
 };
 
-export const handlePartialPGNResult = async (result, addPanel, openModal) => {
+export const handlePartialPGNResult = (result) => {
   console.log(result)
   const chess = new Chess();
 
@@ -83,35 +84,72 @@ export const handlePartialPGNResult = async (result, addPanel, openModal) => {
   }));
 
   // Append the problem move (the one that failed validation)
-  if (result.problemBox) {
+  if (result.derived.problemBox) {
     movesWithValidity.push({
       move: result.problemBox.text || result.problemBox.move || '[invalid]',
       isValid: false
     });
   }
-  console.log({ movesWithValidity})
+  // console.log({ movesWithValidity})
+  return movesWithValidity
 
-  // Dynamically import sidebar panel
-  const { default: ValidationErrorPanel } = await import("../components/sidebar/ValidationErrorPanel");
+}
 
-  addPanel("validation-error", ValidationErrorPanel, {
-    validationError: result,
-    onOpenEditor: async () => {
-      // Dynamically import the editor modal
-      const { default: InteractiveEditor } = await import("../components/modals/InteractiveEditor");
+export const setupBoxesWithCheatMoves = (moves, setBoxes) => {
 
-      openModal(InteractiveEditor, "interactive-editor", {
-        size: "large",
-        pgn: result.pgn,
-        moves: movesWithValidity,
-        problemBox: result.problemBox,
-        onMoveUpdate: (moveData) => {
-          console.log("Move updated:", moveData);
-          // You can later wire this to re-run parseAndValidate
-          // or revalidateMoves(moveData) here.
+    // layout configuration
+    const startTop = 26; // moved down slightly
+    const endBottom = 90; // stop ~5% from bottom
+    const numMoves = moves.length;
+    const totalSpan = endBottom - startTop;
+    const rowGap = totalSpan / (numMoves - 1);
+
+    const numCol = 8; // move numbers
+    const whiteCol = 20; // white moves
+    const blackCol = 58; // black moves
+    const boxW = 8;
+    const boxH = 3;
+
+    const boxes = moves.flatMap((pair, i) => {
+      const [white, black] = pair;
+      const y = startTop + i * rowGap;
+      const moveNum = `${i + 1}.`;
+
+      const rowBoxes = [
+        {
+          id: uuidv4(),
+          text: moveNum,
+          top: y,
+          left: numCol,
+          width: 4,
+          height: boxH,
         },
-      });
-    },
-  });
+      ];
 
+      if (white) {
+        rowBoxes.push({
+          id: uuidv4(),
+          text: white,
+          top: y,
+          left: whiteCol,
+          width: boxW,
+          height: boxH,
+        });
+      }
+
+      if (black) {
+        rowBoxes.push({
+          id: uuidv4(),
+          text: black,
+          top: y,
+          left: blackCol,
+          width: boxW,
+          height: boxH,
+        });
+      }
+
+      return rowBoxes;
+    });
+
+    setBoxes(boxes);
 }

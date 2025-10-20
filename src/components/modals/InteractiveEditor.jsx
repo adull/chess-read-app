@@ -8,10 +8,10 @@ import { isPromotionMove } from '../../helpers';
 import { useChess } from "../../hooks/useChess";
 
 
-const InteractiveEditor = ({ onClose, pgn, moves, problemBox, onMoveUpdate }) => {
-  const { updateBox } = useChess();
+const InteractiveEditor = ({ onClose }) => {
+  const { boxes, setBoxes, derived, updateBox, parseAndValidate } = useChess();
   const [chess, setChess] = useState(new Chess());
-  const [moveHistory, setMoveHistory] = useState(moves);
+  const [moveHistory, setMoveHistory] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [pendingMove, setPendingMove] = useState(null);
   const [isWaitingForConfirmation, setIsWaitingForConfirmation] = useState(false);
@@ -21,6 +21,7 @@ const InteractiveEditor = ({ onClose, pgn, moves, problemBox, onMoveUpdate }) =>
   const { openModal, closeModal } = useModal()
 
   useEffect(() => {
+    const pgn = derived.pgn;
     if (pgn) {
       try {
         const newChess = new Chess();
@@ -33,7 +34,7 @@ const InteractiveEditor = ({ onClose, pgn, moves, problemBox, onMoveUpdate }) =>
         console.error('Error loading PGN:', error);
       }
     }
-  }, [pgn]);
+  }, [derived]);
 
   const handlePieceDrop = (sourceSquare, targetSquare, movePiece) => {
     try {
@@ -73,9 +74,10 @@ const InteractiveEditor = ({ onClose, pgn, moves, problemBox, onMoveUpdate }) =>
   };
 
   const confirmMove = () => {
-    if (pendingMove && onMoveUpdate) {
-      console.log({problemBox})
-      onMoveUpdate(pendingMove);
+    if (pendingMove) {
+      // console.log({problemBox})
+      // onMoveUpdate(pendingMove);
+      console.log(`update move`)
     }
     setPendingMove(null);
     setIsWaitingForConfirmation(false);
@@ -91,6 +93,7 @@ const InteractiveEditor = ({ onClose, pgn, moves, problemBox, onMoveUpdate }) =>
 
   const goToMove = (index) => {
     try {
+      const pgn = derived.pgn
       // If index is -1, go to the initial position
       if (index === -1) {
         const initialChess = new Chess();

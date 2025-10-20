@@ -1,7 +1,7 @@
 import React from "react";
 import { v4 as uuidv4 } from "uuid";
 
-export default function Hacks({ boxes, setBoxes, onClose }) {
+export default function Hacks({ upload, boxes, setBoxes, onClose }) {
   const handleAlmostPerfect = () => {
     const moves = [
         [
@@ -173,11 +173,16 @@ export default function Hacks({ boxes, setBoxes, onClose }) {
     );
   };
 
+  const uploadAndHandleAlmostPerfect = () => {
+    upload();
+    handleAlmostPerfect();
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-between items-center">
         <h2 className="text-xs font-semibold text-gray-600 uppercase tracking-widest">
-          Hacks
+          Hacksd
         </h2>
         {onClose && (
           <button
@@ -189,6 +194,12 @@ export default function Hacks({ boxes, setBoxes, onClose }) {
         )}
       </div>
       <button
+        onClick={uploadAndHandleAlmostPerfect}
+        className="bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md px-3 py-1 transition-colors"
+      >
+        Upload + Perfect Format
+      </button>
+      <button
         onClick={handleAlmostPerfect}
         className="bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md px-3 py-1 transition-colors"
       >
@@ -198,7 +209,7 @@ export default function Hacks({ boxes, setBoxes, onClose }) {
         onClick={handleLogMoves}
         className="bg-gray-700 hover:bg-gray-800 text-white text-sm rounded-md px-3 py-1 transition-colors"
       >
-        Log Moves
+        Log Moves!!
       </button>
     </div>
   );

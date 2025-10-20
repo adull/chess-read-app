@@ -1,158 +1,13 @@
 import React from "react";
+import { cheatMoves } from '../../const'
+import { setupBoxesWithCheatMoves } from '../../helpers'
+
 import { v4 as uuidv4 } from "uuid";
 
-export default function Hacks({ boxes, setBoxes, onClose }) {
+export default function Hacks({ upload, boxes, setBoxes, onClose }) {
   const handleAlmostPerfect = () => {
-    const moves = [
-        [
-          "e4",
-          "e5"
-        ],
-        [
-          "Nc3",
-          "f6"
-        ],
-        [
-          "Bc4",
-          "Nc6"
-        ],
-        [
-          "Nf3",
-          "Bc5"
-        ],
-        [
-          "Na4",
-          "Na5"
-        ],
-        [
-          "Bxg8",
-          "Bxf2+"
-        ],
-        [
-          "Kxf2",
-          "Rxg8"
-        ],
-        [
-          "d4",
-          "Nc6"
-        ],
-        [
-          "dxe5",
-          "Nxe5"
-        ],
-        [
-          "Nxe5",
-          "fxe5"
-        ],
-        [
-          "Rf1",
-          "Rf8"
-        ],
-        [
-          "Kg1",
-          "Rf4"
-        ],
-        [
-          "Bf4",
-          "exf4"
-        ],
-        [
-          "Qh5",
-          "g6"
-        ],
-        [
-          "Qh7",
-          "Qf6"
-        ],
-        [
-          "e5",
-          "Qf8"
-        ],
-        [
-          "Qxg6",
-          "Kd8"
-        ],
-        [
-          "Qg5",
-          "Qe7"
-        ],
-        [
-          "Qxf4",
-          "d6"
-        ],
-        [
-          "exd6",
-          "cxd6"
-        ],
-        [
-          "Re1",
-          "Qd7"
-        ],
-        [
-          "Qf6",
-          "Kc7"
-        ],
-        [
-          "Re7",
-          ""
-        ]
-      ];
-
-    // layout configuration
-    const startTop = 26; // moved down slightly
-    const endBottom = 90; // stop ~5% from bottom
-    const numMoves = moves.length;
-    const totalSpan = endBottom - startTop;
-    const rowGap = totalSpan / (numMoves - 1);
-
-    const numCol = 8; // move numbers
-    const whiteCol = 20; // white moves
-    const blackCol = 58; // black moves
-    const boxW = 8;
-    const boxH = 3;
-
-    const boxes = moves.flatMap((pair, i) => {
-      const [white, black] = pair;
-      const y = startTop + i * rowGap;
-      const moveNum = `${i + 1}.`;
-
-      const rowBoxes = [
-        {
-          id: uuidv4(),
-          text: moveNum,
-          top: y,
-          left: numCol,
-          width: 4,
-          height: boxH,
-        },
-      ];
-
-      if (white) {
-        rowBoxes.push({
-          id: uuidv4(),
-          text: white,
-          top: y,
-          left: whiteCol,
-          width: boxW,
-          height: boxH,
-        });
-      }
-
-      if (black) {
-        rowBoxes.push({
-          id: uuidv4(),
-          text: black,
-          top: y,
-          left: blackCol,
-          width: boxW,
-          height: boxH,
-        });
-      }
-
-      return rowBoxes;
-    });
-
-    setBoxes(boxes);
+    const moves = cheatMoves;
+    setupBoxesWithCheatMoves(moves, setBoxes);
   };
 
   const handleLogMoves = () => {
@@ -171,6 +26,11 @@ export default function Hacks({ boxes, setBoxes, onClose }) {
     console.log(
       "const moves = " + JSON.stringify(triples, null, 2) + ";"
     );
+  };
+
+  const uploadAndHandleAlmostPerfect = () => {
+    upload();
+    handleAlmostPerfect();
   };
 
   return (

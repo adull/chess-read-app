@@ -1,30 +1,23 @@
 import { Chess } from "chess.js";
 import { useState, createContext } from 'react'
-import { tryMove, handlePartialPGNResult } from "../helpers";
-import { useSidebar } from "../components/sidebar/SidebarManager";
-import { useModal } from "../hooks/useModal";
+import { tryMove } from "../helpers";
+import ValidationErrorPanel from "../components/sidebar/ValidationErrorPanel"
+import InteractiveEditor from "../components/modals/InteractiveEditor"
 
 export const ChessContext = createContext();
 
 export const ChessProvider = ({ children }) => {
-    const { addPanel } = useSidebar()
-    const { openModal } = useModal()
     const [boxes, setBoxes] = useState([]);
-    const [derived, setDerived] = useState({ pgn: "", moves: [], validationErrors: [] });
+    const [derived, setDerived] = useState({ success: false, pgn: "", moves: [], problemBox: {} });
 
     const parseAndValidate = () => {
         const parsedMoves = parseMoves(boxes);
-        console.log({ parsedMoves})
         const result = validateMoves(boxes, parsedMoves);
-        console.log({ result })
+        // console.log({ parsedMoves})
+        // console.log({ result })
         
-
         setBoxes(result.boxes);
         setDerived(result.derived);
-
-        if (!result.success && result.pgn) {
-            handlePartialPGNResult(result, addPanel, openModal);
-          }
     }
 
     const updateBox = (id, updates) => {
@@ -97,19 +90,25 @@ export const ChessProvider = ({ children }) => {
             });
           }
         }
+
+        console.log(`right about to return...`)
+        console.log({ updatedBoxes })
       
         return {
-          success: !invalidFound,
           boxes: updatedBoxes,
-          pgn: chess.pgn(),
-          problemBox: updatedBoxes.find(b => b.validity === 'invalid') || null,
+          derived: {
+            success: !invalidFound,
+            pgn: chess.pgn(),
+            moves: chess.history(),
+            problemBox: updatedBoxes.find(b => b.validity === 'invalid') || null,
+          }
         };
       };
       
       
 
     return (
-        <ChessContext.Provider value={{boxes, setBoxes, derived, updateBox, parseAndValidate }}>
+        <ChessContext.Provider value={{ boxes, setBoxes, derived, updateBox, parseAndValidate }}>
             {children}
         </ChessContext.Provider>
     )
