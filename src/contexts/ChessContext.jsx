@@ -1,8 +1,6 @@
 import { Chess } from "chess.js";
 import { useState, createContext } from 'react'
 import { tryMove } from "../helpers";
-import ValidationErrorPanel from "../components/sidebar/ValidationErrorPanel"
-import InteractiveEditor from "../components/modals/InteractiveEditor"
 
 export const ChessContext = createContext();
 
@@ -13,11 +11,12 @@ export const ChessProvider = ({ children }) => {
     const parseAndValidate = () => {
         const parsedMoves = parseMoves(boxes);
         const result = validateMoves(boxes, parsedMoves);
-        // console.log({ parsedMoves})
-        // console.log({ result })
         
+        console.log({ result })
         setBoxes(result.boxes);
         setDerived(result.derived);
+
+        return result
     }
 
     const updateBox = (id, updates) => {
@@ -93,6 +92,8 @@ export const ChessProvider = ({ children }) => {
 
         console.log(`right about to return...`)
         console.log({ updatedBoxes })
+        const problemBox = updatedBoxes.find(b => b.validity === 'invalid')
+        console.log({ problemBox })
       
         return {
           boxes: updatedBoxes,
@@ -100,7 +101,7 @@ export const ChessProvider = ({ children }) => {
             success: !invalidFound,
             pgn: chess.pgn(),
             moves: chess.history(),
-            problemBox: updatedBoxes.find(b => b.validity === 'invalid') || null,
+            problemBox
           }
         };
       };

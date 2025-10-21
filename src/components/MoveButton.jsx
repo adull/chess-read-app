@@ -6,6 +6,7 @@ const MoveButton = ({
     onSelect,
     onEdit,
   }) => {
+    // console.log({ move })
     const isCurrent = index === currentMoveIndex;
     const isInvalid = !move.isValid;
   

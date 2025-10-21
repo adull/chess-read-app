@@ -15,6 +15,8 @@ const ImagePanel = ({ imageUrl, boxes, setBoxes, validatePositionFromBoxes }) =>
     setBoxes((prev) => prev.filter((b) => b.id !== id));
   }, [setBoxes]);
 
+  console.log({boxes })
+
   return (
     <div ref={containerRef} className="relative inline-block">
       <img
@@ -25,7 +27,7 @@ const ImagePanel = ({ imageUrl, boxes, setBoxes, validatePositionFromBoxes }) =>
 
       {boxes.map((box) => (
         <Box
-          key={box.id}
+          key={box?.id}
           box={box}
           onUpdate={handleUpdateBox}
           onDelete={handleDeleteBox}

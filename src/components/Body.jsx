@@ -10,7 +10,6 @@ import { setupBoxesWithCheatMoves } from "../helpers";
 
 const Body = () => {
   const [imageUrl, setImageUrl] = useState('')
-  const [pgn, setPgn] = useState('')
 
   const { addPanel, findPanel } = useSidebar()
   const { openModal } = useModal()
@@ -25,19 +24,16 @@ const Body = () => {
   }, [boxes, setBoxes, addPanel, findPanel]);
   
 
-  // const {
-  //   imageUrl, setImageUrl,
-  //   boxes, setBoxes,
-  //   pgn, setPgn,
-  //   validatePositionFromBoxes,
-  // } = useChessData({ addPanel, findPanel, openModal });
+  const onCopyPgn = () => {
+    console.log({pgn: derived.pgn})
+  }
   const validateAndUpdateUi = () => {
-    parseAndValidate()
+    const uptodate = parseAndValidate()
 
     console.log({ boxes, derived})
-    if(!derived.success && derived.problemBox) {
+    if(!uptodate.derived.success && uptodate.derived.problemBox) {
       import("../components/sidebar/ValidationErrorPanel").then(({ default: ValidationErrorPanel }) => {
-        addPanel("hacks", ValidationErrorPanel, { problemBox: derived.problemBox, onOpenEditor: async() => {
+        addPanel("validation-error-panel", ValidationErrorPanel, { onOpenEditor: async() => {
           const { default: InteractiveEditor } = await import("../components/modals/InteractiveEditor");
           openModal(InteractiveEditor, "interactive-editor", {
             size: "large"
@@ -45,6 +41,10 @@ const Body = () => {
         } });
       });
 
+    } else {
+      import("../components/sidebar/SuccessPanel").then(({ default: SuccessPanel }) => {
+        addPanel('success-panel', SuccessPanel, { onCopyPgn })
+      })
     }
   }
 
@@ -88,9 +88,9 @@ const Body = () => {
           </div>
         )}
 
-        {pgn && (
+        {derived.pgn && (
           <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
-            <ChessBoard pgn={pgn} />
+            <ChessBoard pgn={derived?.pgn} />
           </div>
         )}
       </div>

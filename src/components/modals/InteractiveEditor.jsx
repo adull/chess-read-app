@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import ChessBoard from '../ChessBoard';
 import MoveButton from '../MoveButton';
+import InvalidMoveButton from '../InvalidMoveButton';
 import PromotionChoice from './PromotionChoice';
 import { useModal } from "../../hooks/useModal";
 import { isPromotionMove } from '../../helpers';
 import { useChess } from "../../hooks/useChess";
+import Moves from '../Moves';
 
 
 const InteractiveEditor = ({ onClose }) => {
   const { boxes, setBoxes, derived, updateBox, parseAndValidate } = useChess();
+  
+
+
   const [chess, setChess] = useState(new Chess());
   const [moveHistory, setMoveHistory] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
@@ -20,20 +25,34 @@ const InteractiveEditor = ({ onClose }) => {
 
   const { openModal, closeModal } = useModal()
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   console.log({ currentMoveIndex})
+  // }, [currentMoveIndex])
+
+  const setup = (derived) => {
+    console.log({ derived })
     const pgn = derived.pgn;
     if (pgn) {
       try {
         const newChess = new Chess();
         newChess.loadPgn(pgn);
-        setChess(newChess);
-        // setMoveHistory(newChess.history());
-        setCurrentMoveIndex(newChess.history().length - 1);
-        setCurrentPgn(pgn);
+        updatePgn(newChess)
+        const history = newChess.history()
+        setCurrentMoveIndex(history.length)
+        updateChess(newChess)
+        if(derived.problemBox) {
+          console.log(`how often do we set up lol...`)
+          // console.log({newChess})
+        }
       } catch (error) {
         console.error('Error loading PGN:', error);
       }
     }
+
+  }
+
+  useEffect(() => {
+    setup(derived)
   }, [derived]);
 
   const handlePieceDrop = (sourceSquare, targetSquare, movePiece) => {
@@ -42,13 +61,14 @@ const InteractiveEditor = ({ onClose }) => {
         let modalId;
       
         const choosePiece = (choice) => {
+          console.log({ choice })
           setPromotionChoice(choice);
           closeModal(modalId);
         };
       
         modalId = openModal(PromotionChoice, 'promotion-choice', { color: movePiece.color, choosePiece });
       }
-      console.log(`dropped`)
+      
       const move = chess.move({
         from: sourceSquare,
         to: targetSquare,
@@ -75,6 +95,9 @@ const InteractiveEditor = ({ onClose }) => {
 
   const confirmMove = () => {
     if (pendingMove) {
+      setBoxes(prev => prev.map(box => 
+        box.id === derived.problemBox.id ? { ...box, text: pendingMove.san, validity: "valid"} : box
+      ))
       // console.log({problemBox})
       // onMoveUpdate(pendingMove);
       console.log(`update move`)
@@ -89,6 +112,23 @@ const InteractiveEditor = ({ onClose }) => {
     setCurrentPgn(currentPgn);
     setPendingMove(null);
     setIsWaitingForConfirmation(false);
+  };
+
+  const updateChess = (paramChess, index) => {
+
+    // const newChess = new Chess();
+    //     newChess.loadPgn(pgn);
+    //     updatePgn(newChess)
+    //     const history = newChess.history()
+    //     console.log({ history })
+    //     setCurrentMoveIndex(history.length)
+
+    let indexToSet = index ? index : paramChess.history().length
+    setChess(paramChess);
+    setCurrentMoveIndex(indexToSet);
+      
+    const currentPgn = paramChess.pgn();
+    setCurrentPgn(currentPgn);
   };
 
   const goToMove = (index) => {
@@ -136,6 +176,7 @@ const InteractiveEditor = ({ onClose }) => {
       // Apply moves up to the selected position
       for (let i = 0; i <= index; i++) {
         if (allMoves[i]) {
+          console.log({ move: allMoves[i]})
           const move = positionChess.move(allMoves[i]);
           if (!move) {
             console.error(`Failed to apply move ${i}: ${allMoves[i]}`);
@@ -144,13 +185,10 @@ const InteractiveEditor = ({ onClose }) => {
         }
       }
       
+      console.log({ positionChess })
       // Update state
-      setChess(positionChess);
-      setCurrentMoveIndex(index);
-      
-      // Generate PGN for the current position
-      const currentPgn = positionChess.pgn();
-      setCurrentPgn(currentPgn);
+
+      updateChess(positionChess)
       
     } catch (error) {
       console.error('Error navigating to move:', error);
@@ -171,6 +209,12 @@ const InteractiveEditor = ({ onClose }) => {
     setCurrentPgn(newPgn);
     setMoveHistory(movesWithValidity);
   };
+
+  const editMove = (i) => {
+    console.log({ i })
+    console.log(`edit move..`)
+
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full h-full">
@@ -206,21 +250,9 @@ const InteractiveEditor = ({ onClose }) => {
               <span className="font-mono font-semibold">Start Position</span>
             </button>
           </div>
-          
-          <div className="max-h-80 overflow-y-auto">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              {moveHistory.map((move, index) => (
-                <MoveButton
-                  key={index}
-                  move={move}
-                  index={index}
-                  currentMoveIndex={currentMoveIndex}
-                  onSelect={goToMove}
-                  onEdit={(i) => console.log("Edit move:", i)}
-                />
-              ))}
-            </div>
-          </div>
+          <Moves moveHistory={moveHistory} problemBox={derived.problemBox} currentMoveIndex={currentMoveIndex}
+                 goToMove={goToMove} editMove={editMove} confirmMove={confirmMove} cancelMove={cancelMove} 
+          />
         </div>
 
         {/* Chess Board */}
@@ -234,7 +266,7 @@ const InteractiveEditor = ({ onClose }) => {
                 <strong>New Move:</strong> {pendingMove.san}
               </p>
               <p className="text-xs text-yellow-600 mb-3">
-                Do you want to update the move from {/* maybe pass the bad move to here somehow? */} to <b>{pendingMove.san}</b>?
+                Do you want to update the move from {derived.problemBox.text} to <b>{pendingMove.san}</b>?
               </p>
               <div className="flex gap-2">
                 <button

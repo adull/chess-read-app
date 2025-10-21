@@ -1,7 +1,17 @@
-import React from 'react';
+import React, {useEffect} from 'react';
+import { useChess } from '../../hooks/useChess';
 
-const ValidationErrorPanel = ({ onClose, problemBox, onOpenEditor }) => {
-  console.log({ problemBox})
+const ValidationErrorPanel = ({ onClose, onOpenEditor }) => {
+  // console.log({ problemBox})
+  const { boxes, derived } = useChess()
+  console.log(derived)
+  useEffect(() => {
+    console.log({ boxes })
+  }, [boxes])
+
+  useEffect(() => {
+    console.log({ derived })
+  }, [derived])
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-between items-center">
@@ -20,7 +30,7 @@ const ValidationErrorPanel = ({ onClose, problemBox, onOpenEditor }) => {
       
       <div className="bg-red-50 border border-red-200 rounded-lg p-3">
         <p className="text-sm text-red-800 mb-2">
-          <strong>Error:</strong> {problemBox.error}
+          <strong>Error:</strong> {derived.problemBox?.error}
         </p>
         <p className="text-xs text-red-600">
           The move sequence is valid up to this point, but the next move is invalid.

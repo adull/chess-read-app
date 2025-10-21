@@ -15,15 +15,15 @@ const App = () => {
       console.log(`yerr`)
   }, []);
   return (
-    <ModalProvider>
-      <SidebarProvider>
-        <ChessProvider>
-          <Header />
-          <Body />
-          <Footer />
-        </ChessProvider>
-      </SidebarProvider>
-    </ModalProvider>
+    <ChessProvider>
+      <ModalProvider>
+        <SidebarProvider>
+            <Header />
+            <Body />
+            <Footer />
+        </SidebarProvider>
+      </ModalProvider>
+    </ChessProvider>
   );
 }
 
