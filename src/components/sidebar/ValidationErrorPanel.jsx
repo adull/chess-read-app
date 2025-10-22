@@ -1,17 +1,13 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import { useChess } from '../../hooks/useChess';
 
 const ValidationErrorPanel = ({ onClose, onOpenEditor }) => {
-  // console.log({ problemBox})
-  const { boxes, derived } = useChess()
-  console.log(derived)
-  useEffect(() => {
-    console.log({ boxes })
-  }, [boxes])
-
-  useEffect(() => {
-    console.log({ derived })
-  }, [derived])
+  const { derived } = useChess()
+  const openEditorAndCloseSelf = () => {
+    onClose()
+    onOpenEditor()
+    
+  }
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-between items-center">
@@ -39,7 +35,7 @@ const ValidationErrorPanel = ({ onClose, onOpenEditor }) => {
 
       <div className="flex flex-col gap-2">
         <button
-          onClick={onOpenEditor}
+          onClick={openEditorAndCloseSelf}
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md px-3 py-2 transition-colors"
         >
           Open Interactive Editor

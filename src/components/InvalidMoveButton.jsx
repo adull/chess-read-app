@@ -1,6 +1,6 @@
 import MoveButton from "./MoveButton";
 
-export default function InvalidMoveButton({ problemBox }) {
+export default function InvalidMoveButton({ problemBox, pendingMove, onConfirm, onCancel }) {
   if (!problemBox) return null;
 
   return (

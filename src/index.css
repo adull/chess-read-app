@@ -24,3 +24,26 @@ body {
 .chess-board-container .piece:hover {
   transform: scale(1.1);
 }
+
+@keyframes bounce-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+.animate-bounce-fade {
+  animation: bounce-fade 0.8s ease-out forwards;
+}

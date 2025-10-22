@@ -1,6 +1,6 @@
 import React from "react";
 
-const SuccessPanel = ({ onClose, onCopyPgn }) => {
+const SuccessPanel = ({ onClose, onCopyPgn, openPgnModal }) => {
   return (
     <div className="flex flex-col gap-4 p-2">
       <div className="flex justify-between items-center">
@@ -27,6 +27,12 @@ const SuccessPanel = ({ onClose, onCopyPgn }) => {
           className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md px-3 py-2 transition-colors"
         >
           Copy PGN to Clipboard
+        </button>
+        <button
+            onClick={openPgnModal}
+            className="bg-white border border-green-600 text-green-700 hover:bg-green-600 hover:text-white text-sm font-medium rounded-md px-3 py-2 transition-colors"
+          >
+          Display PGN in Modal
         </button>
 
         <button

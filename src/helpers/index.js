@@ -15,6 +15,7 @@ export const tryMove = (chess, moveText, box, color, moveIndex) => {
     }
     return { success: true };
   } catch (err) {
+    console.log(`THIS IS IN THE CATCH ERR `)
     console.log({ err})
     console.log({ moveText, box, color, moveIndex })
     return {

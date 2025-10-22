@@ -94,7 +94,7 @@ const InteractiveEditor = ({ onClose }) => {
   };
 
   const confirmMove = () => {
-    if (pendingMove) {
+  if (pendingMove) {
       setBoxes(prev => prev.map(box => 
         box.id === derived.problemBox.id ? { ...box, text: pendingMove.san, validity: "valid"} : box
       ))

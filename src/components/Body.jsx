@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import UploadPanel from "./UploadPanel";
 import ImagePanel from "./ImagePanel";
 import ChessBoard from "./ChessBoard";
+import PgnDisplay from './modals/PgnDisplay'
+import CopyPgnButton from "./CopyPgnButton"
 import { useSidebar } from "./sidebar/SidebarManager";
 import { useModal } from "../hooks/useModal";
 import { useChess } from "../hooks/useChess";
@@ -25,8 +27,14 @@ const Body = () => {
   
 
   const onCopyPgn = () => {
-    console.log({pgn: derived.pgn})
+    // console.log({pgn: derived.pgn})
+    navigator.clipboard.writeText(derived.pgn);
   }
+
+  const openPgnModal = () => {
+    openModal(PgnDisplay, "pgn-display", { size: "large" })
+  }
+
   const validateAndUpdateUi = () => {
     const uptodate = parseAndValidate()
 
@@ -43,7 +51,7 @@ const Body = () => {
 
     } else {
       import("../components/sidebar/SuccessPanel").then(({ default: SuccessPanel }) => {
-        addPanel('success-panel', SuccessPanel, { onCopyPgn })
+        addPanel('success-panel', SuccessPanel, { onCopyPgn, openPgnModal })
       })
     }
   }
@@ -90,7 +98,8 @@ const Body = () => {
 
         {derived.pgn && (
           <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
-            <ChessBoard pgn={derived?.pgn} />
+            <ChessBoard pgn={derived.pgn} />
+            <CopyPgnButton text={derived.pgn} />
           </div>
         )}
       </div>
