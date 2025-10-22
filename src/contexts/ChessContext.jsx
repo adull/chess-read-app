@@ -43,7 +43,7 @@ export const ChessProvider = ({ children }) => {
       
         const markBox = (box, validity, error = null) => {
           if (!box) return;
-          console.log({ box })
+          // console.log({ box })
           box.validity = validity;
           box.error = error;
         };

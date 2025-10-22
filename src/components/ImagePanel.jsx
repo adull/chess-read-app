@@ -15,8 +15,6 @@ const ImagePanel = ({ imageUrl, boxes, setBoxes, validatePositionFromBoxes }) =>
     setBoxes((prev) => prev.filter((b) => b.id !== id));
   }, [setBoxes]);
 
-  console.log({boxes })
-
   return (
     <div ref={containerRef} className="relative inline-block">
       <img

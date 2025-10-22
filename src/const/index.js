@@ -45,7 +45,7 @@ const cheatMoves = [
     ],
     [
       "Kg1",
-      "Rf4"
+      "Rg4"
     ],
     [
       "Bf4",
@@ -93,4 +93,4 @@ const cheatMoves = [
     ]
   ];
 
-  export { cheatMoves }
+  export { cheatMoves}

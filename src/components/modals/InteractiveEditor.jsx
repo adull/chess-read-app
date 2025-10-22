@@ -95,12 +95,12 @@ const InteractiveEditor = ({ onClose }) => {
 
   const confirmMove = () => {
   if (pendingMove) {
-      setBoxes(prev => prev.map(box => 
-        box.id === derived.problemBox.id ? { ...box, text: pendingMove.san, validity: "valid"} : box
-      ))
-      // console.log({problemBox})
-      // onMoveUpdate(pendingMove);
-      console.log(`update move`)
+      // setBoxes(prev => prev.map(box => 
+      //   box.id === derived.problemBox.id ? { ...box, text: pendingMove.san, validity: "valid"} : box
+      // ))
+      // console.log(pendingMove)
+      updateBox(derived.problemBox.id, { text: pendingMove.san, validity: "valid" })
+      // parseAndValidate()
     }
     setPendingMove(null);
     setIsWaitingForConfirmation(false);
@@ -197,17 +197,17 @@ const InteractiveEditor = ({ onClose }) => {
 
   const updatePgn = (chess) => {
     const newPgn = chess.pgn();
-    const moveHistory = chess.history({ verbose: true });
+    // const moveHistory = chess.history({ verbose: true });
   
-    const movesWithValidity = moveHistory.map(move => ({
-      move: move.san,
-      from: move.from,
-      to: move.to,
-      isValid: true
-    }));
+    // const movesWithValidity = moveHistory.map(move => ({
+    //   move: move.san,
+    //   from: move.from,
+    //   to: move.to,
+    //   isValid: true
+    // }));
   
     setCurrentPgn(newPgn);
-    setMoveHistory(movesWithValidity);
+    // setMoveHistory(movesWithValidity);
   };
 
   const editMove = (i) => {
@@ -250,7 +250,7 @@ const InteractiveEditor = ({ onClose }) => {
               <span className="font-mono font-semibold">Start Position</span>
             </button>
           </div>
-          <Moves moveHistory={moveHistory} problemBox={derived.problemBox} currentMoveIndex={currentMoveIndex}
+          <Moves boxes={boxes} problemBox={derived.problemBox} currentMoveIndex={currentMoveIndex}
                  goToMove={goToMove} editMove={editMove} confirmMove={confirmMove} cancelMove={cancelMove} 
           />
         </div>
