@@ -2,44 +2,11 @@ import MoveButton from "./MoveButton"
 import InvalidMoveButton from "./InvalidMoveButton"
 
 const Moves = (
-    { boxes, 
+    { moves, 
       currentMoveIndex, 
       goToMove, 
       editMove, 
     }) => {
-        const boxesToMoves = (boxes) => {
-
-            const moves = [];
-            let current = {};
-
-            boxes.forEach((box) => {
-            // If this is a move index marker (like "1.", "2.", etc.)
-            if (/^\d+\.$/.test(box.text)) {
-                // Push previous move if one exists
-                if (Object.keys(current).length > 0) {
-                moves.push(current);
-                }
-
-                current = { moveIndex: parseInt(box.text), whiteMove: null, blackMove: null };
-            }
-            else if (!current.whiteMove) {
-                // First move after the index = white move
-                current.whiteMove = box;
-            }
-            else if (!current.blackMove) {
-                // Second move = black move
-                current.blackMove = box;
-            }
-            });
-
-            // Push the last one if it exists
-            if (Object.keys(current).length > 0) {
-                moves.push(current);
-            }
-            return moves;
-        }
-        // should change so that moves gets passed here but doing some frontend work first so adding this slop in instead.
-        const moves = boxesToMoves(boxes)
 
         const INDEX_W = "w-12"; // ~3rem
         const CELL = "flex-1 min-h-10 flex items-stretch"; // common cell styling
@@ -69,6 +36,7 @@ const Moves = (
               {/* rows */}
               <div>
                 {moves.map((move, i) => {
+                  console.log({ move })
                   const whiteIndex = move.whiteMove?.index ?? i * 2;
                   const blackIndex = move.blackMove?.index ?? i * 2 + 1;
         
@@ -81,10 +49,10 @@ const Moves = (
         
                       {/* white col */}
                       <div className={`${CELL} ${SEP}`}>
-                        {move.whiteMove ? (
+                        {move.white ? (
                           <div className="w-full p-2">
                             <MoveButton
-                              box={move.whiteMove}
+                              box={move.white}
                               index={whiteIndex}
                               currentMoveIndex={currentMoveIndex}
                               onSelect={goToMove}
@@ -100,10 +68,10 @@ const Moves = (
         
                       {/* black col */}
                       <div className={`${CELL}`}>
-                        {move.blackMove ? (
+                        {move.black ? (
                           <div className="w-full p-2">
                             <MoveButton
-                              box={move.blackMove}
+                              box={move.black}
                               index={blackIndex}
                               currentMoveIndex={currentMoveIndex}
                               onSelect={goToMove}

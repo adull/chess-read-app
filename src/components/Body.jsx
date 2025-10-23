@@ -8,14 +8,14 @@ import { useSidebar } from "./sidebar/SidebarManager";
 import { useModal } from "../hooks/useModal";
 import { useChess } from "../hooks/useChess";
 import { cheatMoves } from "../const";
-import { setupBoxesWithCheatMoves, boxesToMoves } from "../helpers";
+import { setupBoxesWithCheatMoves } from "../helpers";
 
 const Body = () => {
   const [imageUrl, setImageUrl] = useState('')
 
   const { addPanel, findPanel } = useSidebar()
   const { openModal } = useModal()
-  const { boxes, derived, setBoxes, parseAndValidate } = useChess()
+  const { boxes, pgn, problemBoxId, pgnIsComplete, setBoxes, parseAndValidate } = useChess()
 
   useEffect(() => {
     if (boxes.length > 0 && !findPanel("hacks")) {
@@ -28,7 +28,7 @@ const Body = () => {
 
   const onCopyPgn = () => {
     // console.log({pgn: derived.pgn})
-    navigator.clipboard.writeText(derived.pgn);
+    navigator.clipboard.writeText(pgn);
   }
 
   const openPgnModal = () => {
@@ -36,10 +36,12 @@ const Body = () => {
   }
 
   const validateAndUpdateUi = () => {
-    const uptodate = parseAndValidate()
+    console.log(`about to validte and update ui`)
+    const validation = parseAndValidate()
+    console.log({ validation})
 
-    console.log({ boxes, derived})
-    if(!uptodate.derived.success && uptodate.derived.problemBox) {
+    // console.log({ boxes, derived})
+    if(!validation.success && validation.problemBox) {
       import("../components/sidebar/ValidationErrorPanel").then(({ default: ValidationErrorPanel }) => {
         addPanel("validation-error-panel", ValidationErrorPanel, { onOpenEditor: async() => {
           const { default: InteractiveEditor } = await import("../components/modals/InteractiveEditor");
@@ -59,8 +61,6 @@ const Body = () => {
   const setup = () => {
     setImageUrl('/clean.jpeg')
     const newBoxes = setupBoxesWithCheatMoves(cheatMoves, setBoxes)
-    const moves = boxesToMoves(newBoxes);
-    console.log({ moves })
     
   }
 
@@ -98,10 +98,10 @@ const Body = () => {
           </div>
         )}
 
-        {derived.pgn && (
+        {pgn && (
           <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
-            <ChessBoard pgn={derived.pgn} />
-            <CopyPgnButton text={derived.pgn} />
+            <ChessBoard pgn={pgn} />
+            <CopyPgnButton text={pgn} />
           </div>
         )}
       </div>

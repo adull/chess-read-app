@@ -5,18 +5,18 @@ import MoveButton from '../MoveButton';
 import InvalidMoveButton from '../InvalidMoveButton';
 import PromotionChoice from './PromotionChoice';
 import { useModal } from "../../hooks/useModal";
-import { isPromotionMove } from '../../helpers';
+import { isPromotionMove, problemBoxFromId } from '../../helpers';
 import { useChess } from "../../hooks/useChess";
 import Moves from '../Moves';
 
 
 const InteractiveEditor = ({ onClose }) => {
-  const { boxes, setBoxes, derived, updateBox, parseAndValidate } = useChess();
+  const { boxes, moves, pgn, setBoxes, updateBox, problemBox, parseAndValidate } = useChess();
   
 
 
   const [chess, setChess] = useState(new Chess());
-  const [moveHistory, setMoveHistory] = useState([]);
+  // const [moveHistory, setMoveHistory] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [pendingMove, setPendingMove] = useState(null);
   const [isWaitingForConfirmation, setIsWaitingForConfirmation] = useState(false);
@@ -29,9 +29,7 @@ const InteractiveEditor = ({ onClose }) => {
   //   console.log({ currentMoveIndex})
   // }, [currentMoveIndex])
 
-  const setup = (derived) => {
-    console.log({ derived })
-    const pgn = derived.pgn;
+  const setup = (pgn) => {
     if (pgn) {
       try {
         const newChess = new Chess();
@@ -40,7 +38,7 @@ const InteractiveEditor = ({ onClose }) => {
         const history = newChess.history()
         setCurrentMoveIndex(history.length)
         updateChess(newChess)
-        if(derived.problemBox) {
+        if(problemBox) {
           console.log(`how often do we set up lol...`)
           // console.log({newChess})
         }
@@ -52,8 +50,8 @@ const InteractiveEditor = ({ onClose }) => {
   }
 
   useEffect(() => {
-    setup(derived)
-  }, [derived]);
+    setup(pgn)
+  }, [pgn]);
 
   const handlePieceDrop = (sourceSquare, targetSquare, movePiece) => {
     try {
@@ -95,12 +93,7 @@ const InteractiveEditor = ({ onClose }) => {
 
   const confirmMove = () => {
   if (pendingMove) {
-      // setBoxes(prev => prev.map(box => 
-      //   box.id === derived.problemBox.id ? { ...box, text: pendingMove.san, validity: "valid"} : box
-      // ))
-      // console.log(pendingMove)
-      updateBox(derived.problemBox.id, { text: pendingMove.san, validity: "valid" })
-      // parseAndValidate()
+      updateBox(problemBox.id, { text: pendingMove.san, validity: "valid" })
     }
     setPendingMove(null);
     setIsWaitingForConfirmation(false);
@@ -133,7 +126,6 @@ const InteractiveEditor = ({ onClose }) => {
 
   const goToMove = (index) => {
     try {
-      const pgn = derived.pgn
       // If index is -1, go to the initial position
       if (index === -1) {
         const initialChess = new Chess();
@@ -250,7 +242,7 @@ const InteractiveEditor = ({ onClose }) => {
               <span className="font-mono font-semibold">Start Position</span>
             </button>
           </div>
-          <Moves boxes={boxes} problemBox={derived.problemBox} currentMoveIndex={currentMoveIndex}
+          <Moves moves={moves} problemBox={problemBox} currentMoveIndex={currentMoveIndex}
                  goToMove={goToMove} editMove={editMove} confirmMove={confirmMove} cancelMove={cancelMove} 
           />
         </div>
@@ -266,7 +258,7 @@ const InteractiveEditor = ({ onClose }) => {
                 <strong>New Move:</strong> {pendingMove.san}
               </p>
               <p className="text-xs text-yellow-600 mb-3">
-                Do you want to update the move from {derived.problemBox.text} to <b>{pendingMove.san}</b>?
+                Do you want to update the move from {problemBox.text} to <b>{pendingMove.san}</b>?
               </p>
               <div className="flex gap-2">
                 <button

@@ -2,8 +2,10 @@ import { Chess } from "chess.js";
 import { v4 as uuidv4 } from "uuid"
 
 // helper function to safely attempt a move
-export const tryMove = (chess, moveText, box, color, moveIndex) => {
+export const tryMove = ({ chess, box, color, moveIndex }) => {
+  const moveText = box?.text ?? '';
   try {
+    
     const move = chess.move(moveText, { sloppy: true });
     if (!move) {
       console.log({ moveText, box, color, moveIndex })
@@ -15,9 +17,6 @@ export const tryMove = (chess, moveText, box, color, moveIndex) => {
     }
     return { success: true };
   } catch (err) {
-    console.log(`THIS IS IN THE CATCH ERR `)
-    console.log({ err})
-    console.log({ moveText, box, color, moveIndex })
     return {
       success: false,
       problemBox: box,
@@ -50,14 +49,14 @@ export const validatePosition = (boxes) => {
     const { whiteBox, blackBox } = moves[i];
 
     if (whiteBox?.text) {
-      const result = tryMove(chess, whiteBox.text, whiteBox, "white", i);
+      const result = tryMove({chess, box: whiteBox, color: "white", moveIndex: i});
       if (!result.success) {
         return { ...result, partialPGN: chess.pgn() };
       }
     }
 
     if (blackBox?.text) {
-      const result = tryMove(chess, blackBox.text, blackBox, "black", i);
+      const result = tryMove({chess, box: blackBox, color: "black", moveIndex: i});
       if (!result.success) {
         return { ...result, partialPGN: chess.pgn() };
       }
@@ -66,35 +65,6 @@ export const validatePosition = (boxes) => {
 
   return { success: true, fullPGN: chess.pgn() };
 };
-
-export const handlePartialPGNResult = (result) => {
-  console.log(result)
-  const chess = new Chess();
-
-  // Load whatever PGN we have
-  if (result.pgn) {
-    chess.loadPgn(result.pgn);
-  }
-
-  // Derive moves and attach validity
-  const moves = chess.history();
-  console.log({ chess, moves })
-  const movesWithValidity = moves.map(move => ({
-    move,
-    isValid: true
-  }));
-
-  // Append the problem move (the one that failed validation)
-  if (result.derived.problemBox) {
-    movesWithValidity.push({
-      move: result.problemBox.text || result.problemBox.move || '[invalid]',
-      isValid: false
-    });
-  }
-  // console.log({ movesWithValidity})
-  return movesWithValidity
-
-}
 
 export const setupBoxesWithCheatMoves = (moves, setBoxes) => {
     // layout configuration
@@ -188,3 +158,5 @@ export const boxesToMoves = (boxes) => {
 
   return Array.from(movesMap.values()).sort((a, b) => a.moveNumber - b.moveNumber);
 }
+
+export const problemBoxFromId = (boxes, id) =>  boxes.find(box => box.id === id)

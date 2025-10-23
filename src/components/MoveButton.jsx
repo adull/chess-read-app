@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 const MoveButton = ({ box, index, currentMoveIndex, onSelect, onEdit }) => {
+  console.log({ box})
   const isCurrent = index === currentMoveIndex;
   const isInvalid = box.validity === "invalid";
   const isUnreached = box.validity === "unreached";

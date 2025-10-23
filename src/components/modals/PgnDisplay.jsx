@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { useChess } from "../../hooks/useChess";
 
 const PgnDisplay = () => {
-  const { derived } = useChess();
+  const { pgn } = useChess();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    if (!derived.pgn) return;
-    await navigator.clipboard.writeText(derived.pgn);
+    if (!pgn) return;
+    await navigator.clipboard.writeText(pgn);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500); // fade after 1.5s
   };
@@ -20,7 +20,7 @@ const PgnDisplay = () => {
 
       <textarea
         readOnly
-        value={derived.pgn}
+        value={pgn}
         className="w-full h-48 p-3 border border-gray-300 rounded-md resize-none font-mono text-sm text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
       />
 
