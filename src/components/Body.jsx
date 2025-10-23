@@ -8,7 +8,7 @@ import { useSidebar } from "./sidebar/SidebarManager";
 import { useModal } from "../hooks/useModal";
 import { useChess } from "../hooks/useChess";
 import { cheatMoves } from "../const";
-import { setupBoxesWithCheatMoves } from "../helpers";
+import { setupBoxesWithCheatMoves, boxesToMoves } from "../helpers";
 
 const Body = () => {
   const [imageUrl, setImageUrl] = useState('')
@@ -58,7 +58,9 @@ const Body = () => {
 
   const setup = () => {
     setImageUrl('/clean.jpeg')
-    setupBoxesWithCheatMoves(cheatMoves, setBoxes)
+    const newBoxes = setupBoxesWithCheatMoves(cheatMoves, setBoxes)
+    const moves = boxesToMoves(newBoxes);
+    console.log({ moves })
     
   }
 

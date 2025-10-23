@@ -97,7 +97,6 @@ export const handlePartialPGNResult = (result) => {
 }
 
 export const setupBoxesWithCheatMoves = (moves, setBoxes) => {
-
     // layout configuration
     const startTop = 26; // moved down slightly
     const endBottom = 90; // stop ~5% from bottom
@@ -124,6 +123,10 @@ export const setupBoxesWithCheatMoves = (moves, setBoxes) => {
           left: numCol,
           width: 4,
           height: boxH,
+          meta: {
+            type: "index",
+            moveNumber: moveNum
+          }
         },
       ];
 
@@ -135,6 +138,10 @@ export const setupBoxesWithCheatMoves = (moves, setBoxes) => {
           left: whiteCol,
           width: boxW,
           height: boxH,
+          meta: {
+            type: "white",
+            moveNumber: moveNum
+          }
         });
       }
 
@@ -146,11 +153,38 @@ export const setupBoxesWithCheatMoves = (moves, setBoxes) => {
           left: blackCol,
           width: boxW,
           height: boxH,
+          meta: {
+            type: "black",
+            moveNumber: moveNum
+          }
         });
       }
+
+      
 
       return rowBoxes;
     });
 
     setBoxes(boxes);
+    return boxes;
+}
+
+export const boxesToMoves = (boxes) => {
+  const movesMap = new Map();
+
+  for (const box of boxes) {
+    const meta = box.meta;
+    if (!meta || meta.type === "index" || !meta.moveNumber) continue;
+
+    const moveNum = meta.moveNumber;
+    if (!movesMap.has(moveNum)) {
+      movesMap.set(moveNum, { moveNumber: moveNum });
+    }
+
+    const move = movesMap.get(moveNum);
+    if (meta.type === "white") move.white = box;
+    if (meta.type === "black") move.black = box;
+  }
+
+  return Array.from(movesMap.values()).sort((a, b) => a.moveNumber - b.moveNumber);
 }
