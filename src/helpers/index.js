@@ -8,7 +8,7 @@ export const tryMove = ({ chess, box, color, moveIndex }) => {
     
     const move = chess.move(moveText, { sloppy: true });
     if (!move) {
-      console.log({ moveText, box, color, moveIndex })
+      // console.log({ moveText, box, color, moveIndex })
       return {
         success: false,
         problemBox: box,

@@ -36,7 +36,6 @@ const Moves = (
               {/* rows */}
               <div>
                 {moves.map((move, i) => {
-                  console.log({ move })
                   const whiteIndex = move.whiteMove?.index ?? i * 2;
                   const blackIndex = move.blackMove?.index ?? i * 2 + 1;
         

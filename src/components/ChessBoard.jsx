@@ -49,7 +49,6 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
       parsed.loadPgn(pgn);
       const headers = parsed.header ? parsed.header() : {};
       const initialFen = headers?.SetUp === '1' && headers?.FEN ? headers.FEN : 'start';
-      console.log({ initialFen})
 
       setStartFen(initialFen);
       const history = parsed.history();
@@ -61,8 +60,6 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
         endGame.move(san);
       }
       gameRef.current = endGame
-      console.log({ g: gameRef.current})
-      console.log({ moveHistory: history})
       setFen(gameRef.current.fen())
       // setCurrentMoveIndex());
     } catch (error) {
