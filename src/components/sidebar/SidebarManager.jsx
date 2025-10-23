@@ -7,6 +7,8 @@ export const SidebarProvider = ({ children }) => {
     const [panels, setPanels] = useState([]);
 
     const addPanel = (name, component, options = {}) => {
+        const existingPanel = findPanel(name)
+        if(existingPanel) return
         const id = uuidv4();
         const newPanel = { 
             id, 

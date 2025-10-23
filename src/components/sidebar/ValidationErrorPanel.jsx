@@ -2,7 +2,7 @@ import React from 'react';
 import { useChess } from '../../hooks/useChess';
 
 const ValidationErrorPanel = ({ onClose, onOpenEditor }) => {
-  const { boxes, problemBox } = useChess()
+  const { problemBox } = useChess()
   const openEditorAndCloseSelf = () => {
     onClose()
     onOpenEditor()
