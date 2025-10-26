@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const UploadPanel = ({ onImageChange, onResult }) => {
@@ -6,6 +6,19 @@ const UploadPanel = ({ onImageChange, onResult }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [token, setToken] = useState('')
+
+  useEffect(() => {
+    axios.get(
+      "http://localhost:9001/mothafuckin-api/chess",
+    ).then((res) => {
+      console.log(res.data)
+      setToken(res?.data?.token)
+    }).catch((err) => {
+      console.log(`errorrrr`)
+      console.log(err)
+    });
+  }, [])
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -31,13 +44,45 @@ const UploadPanel = ({ onImageChange, onResult }) => {
       const formData = new FormData();
       formData.append("image", selectedFile);
 
+
       const response = await axios.post(
-        "http://localhost:9001/mothafuckin-api/chess",
+        "http://localhost:9001/mothafuckin-api/chess/upload",
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { 
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`
+          } 
+        }
       );
 
+      console.log({ response })
+
       if (response.data) {
+        console.log(response)
+
+        const id = response.data.recordId;
+        const eventSource = new EventSource(`http://localhost:9001/mothafuckin-api/chess/stream/${id}`)
+
+        eventSource.onmessage = (event) => {
+          if (event.data === "[DONE]") {
+            console.log("Stream complete");
+            eventSource.close();
+            return;
+          }
+        
+          try {
+            const data = JSON.parse(event.data);
+            console.log("Stream update:", data);
+          } catch {
+            console.log("Raw:", event.data);
+          }
+        };
+        
+        eventSource.onerror = (err) => {
+          console.error("Stream error:", err);
+          eventSource.close();
+        };
         onResult(response.data);
       } else {
         setError("No data received from server.");

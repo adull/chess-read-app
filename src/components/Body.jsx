@@ -19,6 +19,7 @@ const Body = () => {
 
   useEffect(() => {
     if (boxes.length > 0 && !findPanel("hacks")) {
+      console.log({ boxes })
       import("../components/sidebar/Hacks").then(({ default: Hacks }) => {
         addPanel("hacks", Hacks, { boxes, setBoxes });
       });
@@ -27,7 +28,6 @@ const Body = () => {
   
 
   const onCopyPgn = () => {
-    // console.log({pgn: derived.pgn})
     navigator.clipboard.writeText(pgn);
   }
 
@@ -36,11 +36,8 @@ const Body = () => {
   }
 
   const validateAndUpdateUi = () => {
-    console.log(`about to validte and update ui`)
     const validation = parseAndValidate()
-    console.log({ validation})
 
-    // console.log({ boxes, derived})
     if(!validation.success && validation.problemBox) {
       import("../components/sidebar/ValidationErrorPanel").then(({ default: ValidationErrorPanel }) => {
         addPanel("validation-error-panel", ValidationErrorPanel, { onOpenEditor: async() => {
