@@ -13,9 +13,12 @@ export const ChessProvider = ({ children }) => {
     const [pgnIsComplete, setPgnIsComplete] = useState(false);
 
     const parseAndValidate = useCallback((newBoxes = boxes) => {
+      // console.log({ newBoxes })
         // const parsedMoves = parseMoves(boxes);
         const moves = boxesToMoves(newBoxes)
+        // console.log({ moves })
         const result = validateMoves(moves);
+        // console.log({ result })
         
         // console.log({ result })
         setBoxes(result.boxes);
@@ -91,6 +94,7 @@ export const ChessProvider = ({ children }) => {
       }
     
       const problemBox = updatedBoxes.find((b) => b.validity === 'invalid') || null;
+
 
       const updatedMoves = moves.map((move) => {
         const findBox = (origBox) =>

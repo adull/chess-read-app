@@ -34,6 +34,7 @@ const Moves = (
           });
         }
       }, [problemBox])
+      console.log({ moves })
 
       return (
           <div ref={containerRef} className="relative max-h-80 overflow-y-auto border border-gray-200 rounded-md text-sm">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const UploadPanel = ({ onImageChange, onResult }) => {
+const UploadPanel = ({ onImageChange, onResult, logBoxes }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,10 +18,12 @@ const UploadPanel = ({ onImageChange, onResult }) => {
       console.log(`errorrrr`)
       console.log(err)
     });
+
   }, [])
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
+    console.log({ file })
     if (file) {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
@@ -65,7 +67,9 @@ const UploadPanel = ({ onImageChange, onResult }) => {
         const eventSource = new EventSource(`http://localhost:9001/mothafuckin-api/chess/stream/${id}`)
 
         eventSource.onmessage = (event) => {
+          console.log({event})
           if (event.data === "[DONE]") {
+            logBoxes()
             console.log("Stream complete");
             eventSource.close();
             return;
@@ -74,6 +78,7 @@ const UploadPanel = ({ onImageChange, onResult }) => {
           try {
             const data = JSON.parse(event.data);
             console.log("Stream update:", data);
+            onResult(data)
           } catch {
             console.log("Raw:", event.data);
           }
@@ -83,7 +88,7 @@ const UploadPanel = ({ onImageChange, onResult }) => {
           console.error("Stream error:", err);
           eventSource.close();
         };
-        onResult(response.data);
+        // onResult(response.data);
       } else {
         setError("No data received from server.");
       }

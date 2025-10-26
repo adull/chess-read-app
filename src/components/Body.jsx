@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import UploadPanel from "./UploadPanel";
 import ImagePanel from "./ImagePanel";
 import ChessBoard from "./ChessBoard";
@@ -61,6 +61,11 @@ const Body = () => {
     
   }
 
+  const logBoxes = useCallback(() => {
+    console.log(boxes);
+    console.log(JSON.stringify(boxes));
+  }, [boxes]);
+
 
   return (
     <div className="container mx-auto pb-6 px-4">
@@ -77,12 +82,13 @@ const Body = () => {
             >Set up </button>
         <UploadPanel
           onImageChange={(url) => setImageUrl(url)}
-          onResult={(data) => {
-            setBoxes(data.boxes || []);
+          onResult={(box) => {
+            setBoxes(prev => box ? [...prev, box] : [...prev]);
           }}
+          logBoxes={logBoxes}
         />
 
-        {imageUrl && boxes.length > 0 && (
+        {imageUrl && (
           <div className="mt-6">
             <button
               onClick={validateAndUpdateUi}

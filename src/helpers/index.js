@@ -142,18 +142,18 @@ export const setupBoxesWithCheatMoves = (moves, setBoxes) => {
 export const boxesToMoves = (boxes) => {
   const movesMap = new Map();
 
+  console.log(`in boxes to moves..`)
   for (const box of boxes) {
-    const meta = box.meta;
-    if (!meta || meta.type === "index" || !meta.moveNumber) continue;
+    console.log(box)
 
-    const moveNum = meta.moveNumber;
+    const moveNum = box.moveNumber;
     if (!movesMap.has(moveNum)) {
-      movesMap.set(moveNum, { moveNumber: moveNum });
+      movesMap.set(moveNum, { id: uuidv4(), moveNumber: moveNum });
     }
 
     const move = movesMap.get(moveNum);
-    if (meta.type === "white") move.white = box;
-    if (meta.type === "black") move.black = box;
+    if (box.type === "white") move.white = { id: uuidv4(), ...box};
+    if (box.type === "black") move.black = { id: uuidv4(), ...box};
   }
 
   return Array.from(movesMap.values()).sort((a, b) => a.moveNumber - b.moveNumber);
