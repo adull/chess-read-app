@@ -19,7 +19,6 @@ const Body = () => {
 
   useEffect(() => {
     if (boxes.length > 0 && !findPanel("hacks")) {
-      console.log({ boxes })
       import("../components/sidebar/Hacks").then(({ default: Hacks }) => {
         addPanel("hacks", Hacks, { boxes, setBoxes });
       });
@@ -72,14 +71,14 @@ const Body = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold font-roboto">
-            Chess Position Analyzer
+            Chess Notation Reader
           </h2>
         </div>
 
-        <button
+        {/* <button
               onClick={setup}
               className="bg-blue-600 hover:bg-blue-700 text-white text-md rounded-md px-3 py-1 transition-colors"
-            >Set up </button>
+            >Set up </button> */}
         <UploadPanel
           onImageChange={(url) => setImageUrl(url)}
           onResult={(box) => {

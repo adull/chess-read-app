@@ -60,11 +60,21 @@ const UploadPanel = ({ onImageChange, onResult, logBoxes }) => {
 
       console.log({ response })
 
+      const boxes = response.data.boxes.map((box) => {
+        return {
+          left: box.left,
+          top: box.top,
+          width: box.width,
+          height: box.height
+        }
+      })
+
+      const boxesStr = boxes.length ? JSON.stringify(boxes) : ''
+
       if (response.data) {
-        console.log(response)
 
         const id = response.data.recordId;
-        const eventSource = new EventSource(`http://localhost:9001/mothafuckin-api/chess/stream/${id}`)
+        const eventSource = new EventSource(`http://localhost:9001/mothafuckin-api/chess/stream/${id}${boxes.length ? `?boxes=${boxesStr}` : ``}`)
 
         eventSource.onmessage = (event) => {
           console.log({event})
