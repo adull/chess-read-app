@@ -86,6 +86,7 @@ const InteractiveEditor = ({ onClose }) => {
         return true;
       }
     } catch (error) {
+      console.log()
       console.error('Invalid move:', error);
     }
     return false;

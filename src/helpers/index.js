@@ -32,7 +32,6 @@ export const tryMove = ({ chess, box, color, moveIndex }) => {
       return { success: true };
     }
 
-    // Illegal move (chess.move returned null)
     return {
       success: false,
       error: `Illegal ${color} move at move ${moveIndex + 1}: "${san}"`,
@@ -51,7 +50,6 @@ export const tryMove = ({ chess, box, color, moveIndex }) => {
 };
 
 export function* validateMovesLive(moves) {
-  console.log({ moves })
   const chess = new Chess();
   let stopped = false;
 
@@ -63,7 +61,6 @@ export function* validateMovesLive(moves) {
     white: m.white ? { text: m.white } : null,
     black: m.black ? { text: m.black } : null,
   }));
-  console.log({ updatedMoves })
 
   for (let i = 0; i < updatedMoves.length; i++) {
     const move = updatedMoves[i];
@@ -76,7 +73,9 @@ export function* validateMovesLive(moves) {
 
     // ---- WHITE ----
     if (move.white) {
+      
       const result = tryMove({ chess, box: move.white, color: "white", moveIndex: i });
+      console.log({result})
       if (result.success) {
         move.white = annotate(move.white.text, "valid");
 

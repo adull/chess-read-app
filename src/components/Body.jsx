@@ -5,6 +5,7 @@ import ChessBoard from "./ChessBoard";
 import PgnDisplay from './modals/PgnDisplay'
 import CopyPgnButton from "./CopyPgnButton"
 import MovesEditor from "./MovesEditor"
+import ErrorPanel from "../components/sidebar/ErrorPanel"
 import { useSidebar } from "./sidebar/SidebarManager";
 import { useModal } from "../hooks/useModal";
 import { useChess } from "../hooks/useChess";
@@ -14,7 +15,7 @@ import { validateMovesLive } from "../helpers";
 const Body = () => {
   const [imageUrl, setImageUrl] = useState('')
 
-  const { addPanel, findPanel } = useSidebar()
+  const { addPanel, findPanel, removePanel } = useSidebar()
   const { openModal } = useModal()
   // const { moves, pgn,  pgnIsComplete, setMoves, parseAndValidate } = useChess()
   const [moveList, setMoveList] = useState([])
@@ -40,13 +41,7 @@ const Body = () => {
       }
   
       if (!step.success && step.issue) {
-        console.log(`ISSUE`)
-        console.log({
-          hasIssue: true,
-          moveNumber: step.issue.moveNumber,
-          turn: step.issue.color,
-          message: step.issue.message
-        })
+        addPanel('error-panel', ErrorPanel, { errorMessage: step.issue.message })
         setPgnIssue({
           hasIssue: true,
           moveNumber: step.issue.moveNumber,
@@ -128,14 +123,14 @@ const Body = () => {
           </h2>
         </div>
 
-        <button
+        {/* <button
               onClick={setup}
               className="bg-blue-600 hover:bg-blue-700 text-white text-md rounded-md px-3 py-1 transition-colors"
-            >Set up </button>
-        {/* <UploadPanel
+            >Set up </button> */}
+        <UploadPanel
           onImageChange={(url) => setImageUrl(url)}
           onResult={(move) => updateMoves(move)}
-        /> */}
+        />
 
         {moveList.length > 0 && (
           <>

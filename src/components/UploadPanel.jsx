@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import ResizablePIP from "./ResizablePIP";
 import axios from "axios";
 
 const UploadPanel = ({ onImageChange, onResult }) => {
@@ -7,6 +8,8 @@ const UploadPanel = ({ onImageChange, onResult }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [token, setToken] = useState('')
+  const [pipSize, setPipSize] = useState({ width: 0, height: 0 })
+  const imgRef = useRef(null)
 
   useEffect(() => {
     axios.get(
@@ -21,9 +24,10 @@ const UploadPanel = ({ onImageChange, onResult }) => {
 
   }, [])
 
+  // useEffect(() => { console.log(imgRef.current)}, [previewUrl])
+
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
-    console.log({ file })
     if (file) {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
@@ -38,9 +42,11 @@ const UploadPanel = ({ onImageChange, onResult }) => {
       setError("Please select an image first.");
       return;
     }
+    
 
     setIsLoading(true);
     setError("");
+    return
 
     try {
       const formData = new FormData();
@@ -104,6 +110,14 @@ const UploadPanel = ({ onImageChange, onResult }) => {
     }
   };
 
+  const handleImgLoad = () => {
+    if (imgRef.current) {
+      const { width, height } = imgRef.current.getBoundingClientRect();
+      console.log({ width, height})
+      setPipSize({ width, height });
+    }
+  };
+
   const handleClear = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
@@ -111,6 +125,7 @@ const UploadPanel = ({ onImageChange, onResult }) => {
     setError("");
   };
 
+  console.log(imgRef.current)
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
       <h3 className="text-lg font-semibold mb-4 font-roboto">
@@ -128,13 +143,36 @@ const UploadPanel = ({ onImageChange, onResult }) => {
         />
 
         {previewUrl && (
-          <div className="mt-4 flex justify-center">
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="max-w-xs max-h-64 object-contain border rounded-lg"
-            />
-          </div>
+          <>
+            <div className="mt-4 flex justify-center">
+              <img
+                ref={imgRef}
+                src={previewUrl}
+                onLoad={handleImgLoad}
+                alt="Preview"
+                className="pointer-events-none max-w-xs max-h-64 object-contain rounded-lg opacity-0"
+              />
+              {pipSize.width && pipSize.height && (
+                <ResizablePIP
+                  width={pipSize.width}
+                  height={pipSize.height}
+                  minConstraints={[pipSize.width ?? 100, pipSize.height ?? 100]}
+                  maxConstraints={[800, 800]}
+                  previewUrl={previewUrl}
+                >
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-full h-full object-contain pointer-events-none"
+                  />
+                </ResizablePIP>
+              )}
+                
+            
+            </div>
+
+            
+          </>
         )}
 
         <div className="flex gap-3">

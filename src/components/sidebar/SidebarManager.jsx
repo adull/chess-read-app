@@ -36,9 +36,8 @@ export const SidebarProvider = ({ children }) => {
         const existingPanel = findPanel(name);
         if (existingPanel) {
             removePanel(existingPanel.id);
-        } else {
-            addPanel(name, component, options);
-        }
+        } 
+        addPanel(name, component, options);
     };
 
     return (

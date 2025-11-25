@@ -6,6 +6,7 @@ import { Chessboard } from 'react-chessboard';
 import { MoveButton } from './MoveButton';
 import { useSidebar } from "./sidebar/SidebarManager";
 import ReplaceMovePanel from '../components/sidebar/ReplaceMovePanel'
+import ErrorPanel from '../components/sidebar/ErrorPanel'
 
 import PromotionChoice from './modals/PromotionChoice';
 
@@ -20,19 +21,20 @@ const ChessBoard = ({ pgn, moveList, pgnIssue, onChangeMove }) => {
   const [promotionChoice, setPromotionChoice] = useState('q')
   const [visibleMoves, setVisibleMoves] = useState([])
   const { openModal, closeModal } = useModal();
-  const { addPanel, findPanel } = useSidebar()
-
-  const chessGame = gameRef.current
+  // const { togglePanel, findPanel } = useSidebar()
+  const {findPanel, addPanel, removePanel, togglePanel } = useSidebar()
+  const movesRef = useRef(null)
 
   useEffect(() => {
     if(pgnIssue.hasIssue) {
-      // console.log(pgnIssue)
-      // console.log(moveList)
+      console.log(pgnIssue.hasIssue)
       const okMoves = moveList.slice(0, pgnIssue.moveNumber)
-      // console.log({ okMoves })
       const flatOkMoves = flattenMoves(okMoves)
       setVisibleMoves(okMoves)
       setCurrentMoveIndex(flatOkMoves.length - 1)
+      setTimeout(() => { movesRef.current.scrollTop = movesRef.current.scrollHeight}, 10)
+      
+  
       return
     }
     console.log(moveList)
@@ -75,7 +77,9 @@ const ChessBoard = ({ pgn, moveList, pgnIssue, onChangeMove }) => {
         text: now,
       });
     }
-    addPanel('replace-move-panel', ReplaceMovePanel, { before, now, onReplaceMove })
+
+    
+    togglePanel('replace-move-panel', ReplaceMovePanel, { before, now, onReplaceMove })
   }
 
   // const onSquareClick = (square) => {
@@ -124,8 +128,8 @@ const ChessBoard = ({ pgn, moveList, pgnIssue, onChangeMove }) => {
       sourceSquare,
       targetSquare
     }) {
-      const movePiece = chessGame.get(sourceSquare);
-      console.log({currentMoveIndex})
+      const movePiece = gameRef.current.get(sourceSquare);
+      console.log({sourceSquare, targetSquare})
       const flatMoveList = flattenMoves(moveList)
       const currentMove = flatMoveList[currentMoveIndex]
       console.log({ currentMove })
@@ -133,9 +137,14 @@ const ChessBoard = ({ pgn, moveList, pgnIssue, onChangeMove }) => {
 
       console.log(movePiece, sourceSquare, targetSquare )
 
-      const san = getSanForMove(chessGame, {from: sourceSquare, to: targetSquare})
+      const san = getSanForMove(gameRef.current, {from: sourceSquare, to: targetSquare})
+      // gameRef.current.move(san)
       console.log({ san })
-      askToUpdateMove(currentMove, san, Math.floor(currentMoveIndex / 2) + 1, color)
+      if(san) {
+        askToUpdateMove(currentMove, san, Math.floor(currentMoveIndex / 2) + 1, color)
+      } else {
+        togglePanel('error-panel', ErrorPanel, { errorMessage: 'Invalid move' })
+      }
 
 
       // type narrow targetSquare potentially being null (e.g. if dropped off board)
@@ -264,14 +273,19 @@ const ChessBoard = ({ pgn, moveList, pgnIssue, onChangeMove }) => {
               />
             </div>
 
-            <div className="max-h-40 overflow-y-auto">
+            <div className="max-h-40 overflow-y-auto" ref={movesRef}>
               <h4 className="font-semibold mb-2 font-roboto">Moves:</h4>
 
               <div className="grid grid-cols-2 gap-1 text-sm">
-                {visibleMoves.map((move, index) => (
+                {visibleMoves.map((move, index) => {
+                  const blackIsProblem = pgnIssue.moveNumber === move.moveNumber && pgnIssue.turn === "black"
+                  const whiteIsProblem = pgnIssue.moveNumber === move.moveNumber && pgnIssue.turn === "white"
+
+                  return (
                   <React.Fragment key={index}>
 
                     <MoveButton
+                      isProblem={whiteIsProblem}
                       active={currentMoveIndex === index}
                       onClick={() => goToMove(index * 2)}
                     >
@@ -280,14 +294,14 @@ const ChessBoard = ({ pgn, moveList, pgnIssue, onChangeMove }) => {
 
                     <MoveButton
                       move={move}
-                      
+                      isProblem={blackIsProblem}
                       onClick={() => goToMove(index * 2 + 1)}
                     >
                       {move.black}
                     </MoveButton>
 
                   </React.Fragment>
-                ))}
+                )})}
               </div>
             </div>
           </>
