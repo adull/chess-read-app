@@ -8,7 +8,15 @@ export const isPromotionMove = (piece, targetSquare) => {
   );
 };
 
-
+export const getSanForMove = (chessGame, { from, to, promotion }) => {
+  const moves = chessGame.moves({ verbose: true });
+  const match = moves.find(m =>
+    m.from === from &&
+    m.to === to &&
+    (promotion ? m.promotion === promotion : true)
+  );
+  return match ? match.san : null;
+}
 
 export const tryMove = ({ chess, box, color, moveIndex }) => {
   const san = box.text?.trim();
@@ -69,11 +77,7 @@ export function* validateMovesLive(moves) {
     // ---- WHITE ----
     if (move.white) {
       const result = tryMove({ chess, box: move.white, color: "white", moveIndex: i });
-
-      console.log({ result })
-      console.log({move})
       if (result.success) {
-        // chess.move(move.white.text, { sloppy: true });
         move.white = annotate(move.white.text, "valid");
 
         yield {
@@ -109,7 +113,6 @@ export function* validateMovesLive(moves) {
       const result = tryMove({ chess, box: move.black, color: "black", moveIndex: i });
 
       if (result.success) {
-        // chess.move(move.black, { sloppy: true });
         move.black = annotate(move.black.text, "valid");
 
         yield {

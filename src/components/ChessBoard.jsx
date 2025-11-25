@@ -1,44 +1,44 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useModal } from '../hooks/useModal';
-import { isPromotionMove } from '../helpers';
+import { isPromotionMove, getSanForMove } from '../helpers';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+import { MoveButton } from './MoveButton';
+import { useSidebar } from "./sidebar/SidebarManager";
+import ReplaceMovePanel from '../components/sidebar/ReplaceMovePanel'
 
 import PromotionChoice from './modals/PromotionChoice';
 
 const INIT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
-const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = true }) => {
+const ChessBoard = ({ pgn, moveList, pgnIssue, onChangeMove }) => {
   const gameRef = useRef(new Chess());
   const [fen, setFen] = useState(INIT_FEN);
-  const [moveHistory, setMoveHistory] = useState([]);
+  // const [moveHistory, setMoveHistory] = useState([]);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [startFen, setStartFen] = useState('start');
   const [promotionChoice, setPromotionChoice] = useState('q')
+  const [visibleMoves, setVisibleMoves] = useState([])
   const { openModal, closeModal } = useModal();
+  const { addPanel, findPanel } = useSidebar()
 
   const chessGame = gameRef.current
 
-  // Generate square styles programmatically - much cleaner than hardcoding
-  // const getSquareStyles = () => {
-  //   const styles = {};
-  //   const lightColor = '#ffffff';
-  //   const darkColor = '#000000';
-  //   
-  //   // Generate all 64 squares using a simple loop
-  //   for (let file = 0; file < 8; file++) {
-  //     for (let rank = 0; rank < 8; rank++) {
-  //       const square = String.fromCharCode(97 + file) + (8 - rank);
-  //       const isLight = (file + rank) % 2 === 0;
-  //       styles[square] = {
-  //         backgroundColor: isLight ? lightColor : darkColor
-  //       };
-  //     }
-  //   }
-  //   
-  //   // console.log({ styles })
-  //   return styles;
-  // };
+  useEffect(() => {
+    if(pgnIssue.hasIssue) {
+      // console.log(pgnIssue)
+      // console.log(moveList)
+      const okMoves = moveList.slice(0, pgnIssue.moveNumber)
+      // console.log({ okMoves })
+      const flatOkMoves = flattenMoves(okMoves)
+      setVisibleMoves(okMoves)
+      setCurrentMoveIndex(flatOkMoves.length - 1)
+      return
+    }
+    console.log(moveList)
+    setCurrentMoveIndex(moveList.length - 1)
+    
+  }, [moveList, pgnIssue])
 
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
 
       setStartFen(initialFen);
       const history = parsed.history();
-      setMoveHistory(history);
+      // setMoveHistory(history);
 
       // Initialize board to end position by default
       const endGame = initialFen === 'start' ? new Chess() : new Chess(initialFen);
@@ -67,124 +67,104 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
     }
   }, [pgn]);
 
+  const askToUpdateMove = (before, now, moveNumber, color) => {
+    const onReplaceMove = () => {
+      onChangeMove({
+        moveNumber,
+        type: color,
+        text: now,
+      });
+    }
+    addPanel('replace-move-panel', ReplaceMovePanel, { before, now, onReplaceMove })
+  }
+
   // const onSquareClick = (square) => {
   //   console.log({ square })
   // };
 
-  const goToMove = useCallback((moveIndex) => {
-    console.log(`go to move ${moveIndex}`)
-    if (moveIndex < -1 || moveIndex >= moveHistory.length) return;
+  const flattenMoves = (moveList) => {
+    const arr = [];
+  
+    for (const m of moveList) {
+      if (m.white) arr.push(m.white);
+      if (m.black) arr.push(m.black);
+    }
+  
+    return arr;
+  };
 
+  const goToMove = useCallback((moveIndex) => {
+    let actualMove = 0
+    const moves = flattenMoves(moveList).slice(0,moveIndex + 1)
     try {
       const base = startFen === 'start' ? new Chess() : new Chess(startFen);
 
       if (moveIndex >= 0) {
-        for (let i = 0; i <= moveIndex; i++) {
-          base.move(moveHistory[i]);
+        for (let i = 0; i <= moves.length - 1; i++) {
+          try {
+            base.move(moves[i], {sloppy: true });
+            actualMove++
+          } catch(e) {
+            // if(i > 0) base.move(moves[i - 1], {sloppy: true });
+
+          }
         }
       }
 
       gameRef.current = base;
       setFen(base.fen());
-      setCurrentMoveIndex(moveIndex);
+      setCurrentMoveIndex(actualMove);
     } catch (error) {
       console.error('Error navigating to move:', error);
     }
-  }, [moveHistory, startFen]);
+  }, [startFen]);
 
-  const goToStart = useCallback(() => goToMove(-1), [goToMove]);
-  const goToEnd = useCallback(() => goToMove(moveHistory.length - 1), [goToMove, moveHistory.length]);
-  const goToPrevious = useCallback(() => goToMove(currentMoveIndex - 1), [goToMove, currentMoveIndex]);
-  const goToNext = useCallback(() => goToMove(currentMoveIndex + 1), [goToMove, currentMoveIndex]);
-
-  // Keyboard navigation: Left/Right arrows
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        goToPrevious();
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        goToNext();
-      } else if (e.key === 'Home') {
-        e.preventDefault();
-        goToStart();
-      } else if (e.key === 'End') {
-        e.preventDefault();
-        goToEnd();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [goToPrevious, goToNext, goToStart, goToEnd]);
-
-  if (!pgn) {
-    return (
-      <div className="text-center text-gray-500 py-8 font-roboto">
-        No PGN data available. Please upload an image to analyze.
-      </div>
-    );
-  }
-
-
-
-    // make a random "CPU" move
-    function makeRandomMove() {
-      // get all possible moves`
-      const possibleMoves = chessGame.moves();
-
-      // exit if the game is over
-      if (chessGame.isGameOver()) {
-        return;
-      }
-
-      // pick a random move
-      const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-
-      // make the move
-      chessGame.move(randomMove);
-
-      // update the position state
-      setFen(chessGame.fen());
-    }
-
-    // handle piece drop
+  // this needs to update the game
     function onPieceDrop({
       sourceSquare,
       targetSquare
     }) {
       const movePiece = chessGame.get(sourceSquare);
+      console.log({currentMoveIndex})
+      const flatMoveList = flattenMoves(moveList)
+      const currentMove = flatMoveList[currentMoveIndex]
+      console.log({ currentMove })
+      const color = movePiece.color === 'b' ? 'black' : 'white'
 
-      if (externalOnPieceDrop) {
-        return externalOnPieceDrop(sourceSquare, targetSquare, movePiece);
-      }
+      console.log(movePiece, sourceSquare, targetSquare )
+
+      const san = getSanForMove(chessGame, {from: sourceSquare, to: targetSquare})
+      console.log({ san })
+      askToUpdateMove(currentMove, san, Math.floor(currentMoveIndex / 2) + 1, color)
+
 
       // type narrow targetSquare potentially being null (e.g. if dropped off board)
       if (!targetSquare) {
         return false;
       }
 
-      if (isPromotionMove(movePiece.type, targetSquare)) {
-        let modalId;
+      // if (isPromotionMove(movePiece.type, targetSquare)) {
+      //   let modalId;
       
-        const choosePiece = (choice) => {
-          console.log({ choice })
-          setPromotionChoice(choice);
-          closeModal(modalId);
-        };
+      //   const choosePiece = (choice) => {
+      //     console.log({ choice })
+      //     setPromotionChoice(choice);
+      //     closeModal(modalId);
+      //   };
       
-        modalId = openModal(PromotionChoice, 'promotion-choice', { color: movePiece.color, choosePiece });
-      }
+      //   modalId = openModal(PromotionChoice, 'promotion-choice', { color: movePiece.color, choosePiece });
+      // }
       // try to make the move according to chess.js logig
       try {
-        chessGame.move({
-          from: sourceSquare,
-          to: targetSquare,
-          promotion: promotionChoice
-        });
+        // const move = chessGame.move({
+        //   from: sourceSquare,
+        //   to: targetSquare,
+        //   promotion: promotionChoice
+        // });
+
 
         // update the position state upon successful move to trigger a re-render of the chessboard
-        setFen(chessGame.fen());
+        // setFen(chessGame.fen());
 
         // make random cpu move after a short delay
         // setTimeout(makeRandomMove, 500);
@@ -196,6 +176,21 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
         return false;
       }
     }
+
+  const goToStart = useCallback(() => goToMove(-1), [goToMove]);
+  const goToEnd = useCallback(() => goToMove(moveList.length - 1), [goToMove, moveList.length]);
+  const goToPrevious = useCallback(() => goToMove(currentMoveIndex - 1), [goToMove, currentMoveIndex]);
+  const goToNext = useCallback(() => goToMove(currentMoveIndex + 1), [goToMove, currentMoveIndex]);
+
+  
+
+  if (!pgn) {
+    return (
+      <div className="text-center text-gray-500 py-8 font-roboto">
+        No PGN data available. Please upload an image to analyze.
+      </div>
+    );
+  }
 
     // set the chessboard options
     const chessboardOptions = {
@@ -220,7 +215,7 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
           </div>
         </div>
 
-        {showMoveHistory && (
+        {moveList.length > 0 && (
           <>
             {/* Move Navigation Controls */}
             <div className="flex justify-center gap-2 mb-4">
@@ -240,14 +235,14 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
               </button>
               <button
                 onClick={goToNext}
-                disabled={currentMoveIndex >= moveHistory.length - 1}
+                disabled={currentMoveIndex >= moveList.length - 1}
                 className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
               >
                 Next
               </button>
               <button
                 onClick={goToEnd}
-                disabled={currentMoveIndex === moveHistory.length - 1}
+                disabled={currentMoveIndex === moveList.length - 1}
                 className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 font-roboto"
               >
                 End
@@ -257,53 +252,46 @@ const ChessBoard = ({ pgn, onPieceDrop: externalOnPieceDrop, showMoveHistory = t
             {/* Slider Navigation */}
             <div className="flex items-center gap-3 mb-6">
               <span className="text-sm text-gray-600 font-roboto w-14 text-right">
-                {currentMoveIndex + 1}/{moveHistory.length}
+                {Math.floor(currentMoveIndex / 2) + 1 + ` ` + currentMoveIndex % 2 === 0 ? 'w' : 'b'}/{Math.ceil(moveList.length / 2)}
               </span>
               <input
                 type="range"
                 min={0}
-                max={moveHistory.length}
+                max={moveList.length}
                 value={currentMoveIndex + 1}
                 onChange={(e) => goToMove(Number(e.target.value) - 1)}
                 className="flex-1"
               />
             </div>
 
-            {/* Move List */}
             <div className="max-h-40 overflow-y-auto">
               <h4 className="font-semibold mb-2 font-roboto">Moves:</h4>
+
               <div className="grid grid-cols-2 gap-1 text-sm">
-                {moveHistory.map((move, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToMove(index)}
-                    className={`p-2 text-left rounded font-roboto ${
-                      index === currentMoveIndex
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    {index + 1}. {move}
-                  </button>
+                {visibleMoves.map((move, index) => (
+                  <React.Fragment key={index}>
+
+                    <MoveButton
+                      active={currentMoveIndex === index}
+                      onClick={() => goToMove(index * 2)}
+                    >
+                      {move.moveNumber}. {move.white}
+                    </MoveButton>
+
+                    <MoveButton
+                      move={move}
+                      
+                      onClick={() => goToMove(index * 2 + 1)}
+                    >
+                      {move.black}
+                    </MoveButton>
+
+                  </React.Fragment>
                 ))}
               </div>
             </div>
           </>
         )}
-
-        {/* Game Status */}
-        <div className="mt-4 text-center text-sm text-gray-600 font-roboto">
-          {gameRef.current.isGameOver() ? (
-            <span className="font-semibold">
-              Game Over - {gameRef.current.isCheckmate() ? 'Checkmate' : 'Draw'}
-            </span>
-          ) : (
-            <span>
-              {gameRef.current.turn() === 'w' ? 'White' : 'Black'} to move
-              {gameRef.current.isCheck() && ' (Check)'}
-            </span>
-          )}
-        </div>
       </div>
     </div>
   );

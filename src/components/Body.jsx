@@ -99,6 +99,7 @@ const Body = () => {
 
 
   const updateMoves = (move) => {
+    console.log({ move })
     if (!move) return
     setMoveList(prev => {
       const copy = [...prev]
@@ -127,19 +128,18 @@ const Body = () => {
           </h2>
         </div>
 
-        {/* <button
+        <button
               onClick={setup}
               className="bg-blue-600 hover:bg-blue-700 text-white text-md rounded-md px-3 py-1 transition-colors"
-            >Set up </button> */}
-        <UploadPanel
+            >Set up </button>
+        {/* <UploadPanel
           onImageChange={(url) => setImageUrl(url)}
           onResult={(move) => updateMoves(move)}
-        />
+        /> */}
 
         {moveList.length > 0 && (
           <>
-            <MovesEditor moveList={moveList} canEdit={isDone} pgnIssue={pgnIssue} onChangeMove={updateMoves} />
-            <ChessBoard pgn={pgn} />
+            <ChessBoard pgn={pgn} moveList={moveList} pgnIssue={pgnIssue} onChangeMove={updateMoves} />
           </>
         )}
         
