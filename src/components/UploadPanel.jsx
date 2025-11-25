@@ -46,7 +46,6 @@ const UploadPanel = ({ onImageChange, onResult }) => {
 
     setIsLoading(true);
     setError("");
-    return
 
     try {
       const formData = new FormData();
