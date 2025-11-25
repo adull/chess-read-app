@@ -4,26 +4,23 @@ import ImagePanel from "./ImagePanel";
 import ChessBoard from "./ChessBoard";
 import PgnDisplay from './modals/PgnDisplay'
 import CopyPgnButton from "./CopyPgnButton"
+import MovesEditor from "./MovesEditor"
 import { useSidebar } from "./sidebar/SidebarManager";
 import { useModal } from "../hooks/useModal";
 import { useChess } from "../hooks/useChess";
-import { cheatMoves } from "../const";
-import { setupBoxesWithCheatMoves } from "../helpers";
+import { cheatMoveList } from "../const";
+import { validateMovesLive } from "../helpers";
 
 const Body = () => {
   const [imageUrl, setImageUrl] = useState('')
 
   const { addPanel, findPanel } = useSidebar()
   const { openModal } = useModal()
-  const { boxes, pgn, problemBoxId, pgnIsComplete, setBoxes, parseAndValidate } = useChess()
-
-  useEffect(() => {
-    if (boxes.length > 0 && !findPanel("hacks")) {
-      import("../components/sidebar/Hacks").then(({ default: Hacks }) => {
-        addPanel("hacks", Hacks, { boxes, setBoxes });
-      });
-    }
-  }, [boxes, setBoxes, addPanel, findPanel]);
+  // const { moves, pgn,  pgnIsComplete, setMoves, parseAndValidate } = useChess()
+  const [moveList, setMoveList] = useState([])
+  const [pgn, setPgn] = useState('')
+  const [isDone, setIsDone] = useState(false)
+  const [pgnIssue, setPgnIssue] = useState({ hasIssue: false, moveNumber: -1, turn: 'white' })
   
 
   const onCopyPgn = () => {
@@ -34,36 +31,91 @@ const Body = () => {
     openModal(PgnDisplay, "pgn-display", { size: "large" })
   }
 
-  const validateAndUpdateUi = () => {
-    const validation = parseAndValidate()
-
-    if(!validation.success && validation.problemBox) {
-      import("../components/sidebar/ValidationErrorPanel").then(({ default: ValidationErrorPanel }) => {
-        addPanel("validation-error-panel", ValidationErrorPanel, { onOpenEditor: async() => {
-          const { default: InteractiveEditor } = await import("../components/modals/InteractiveEditor");
-          openModal(InteractiveEditor, "interactive-editor", {
-            size: "large"
-          })
-        } });
-      });
-
-    } else {
-      import("../components/sidebar/SuccessPanel").then(({ default: SuccessPanel }) => {
-        addPanel('success-panel', SuccessPanel, { onCopyPgn, openPgnModal })
-      })
+  useEffect(() => {
+    const validator = validateMovesLive(moveList);
+  
+    for (const step of validator) {
+      if (step.success) {
+        setPgn(step.pgn);   // <-- Update PGN here
+      }
+  
+      if (!step.success && step.issue) {
+        console.log(`ISSUE`)
+        console.log({
+          hasIssue: true,
+          moveNumber: step.issue.moveNumber,
+          turn: step.issue.color,
+          message: step.issue.message
+        })
+        setPgnIssue({
+          hasIssue: true,
+          moveNumber: step.issue.moveNumber,
+          turn: step.issue.color,
+          message: step.issue.message
+        });
+        break;
+      }
     }
+
+    setIsDone(true)
+
+    // console.log(moveList)
+    // console.log(`json`)
+    // console.log(JSON.stringify(moveList))
+  }, [moveList]);
+  
+  
+
+  // const validateAndUpdateUi = () => {
+  //   const validation = parseAndValidate()
+
+  //   if(!validation.success && validation.problemBox) {
+  //     import("../components/sidebar/ValidationErrorPanel").then(({ default: ValidationErrorPanel }) => {
+  //       addPanel("validation-error-panel", ValidationErrorPanel, { onOpenEditor: async() => {
+  //         const { default: InteractiveEditor } = await import("../components/modals/InteractiveEditor");
+  //         openModal(InteractiveEditor, "interactive-editor", {
+  //           size: "large"
+  //         })
+  //       } });
+  //     });
+
+  //   } else {
+  //     import("../components/sidebar/SuccessPanel").then(({ default: SuccessPanel }) => {
+  //       addPanel('success-panel', SuccessPanel, { onCopyPgn, openPgnModal })
+  //     })
+  //   }
+  // }
+
+  // const setup = () => {
+  //   setImageUrl('/clean.jpeg')
+  //   const newBoxes = setupBoxesWithCheatMoves(cheatMoves, setBoxes)
+    
+  // }
+
+  // const logMoves = useCallback(() => {
+  //   console.log(moves);
+  //   console.log(JSON.stringify(moves));
+  // }, [moves]);
+
+
+  const updateMoves = (move) => {
+    if (!move) return
+    setMoveList(prev => {
+      const copy = [...prev]
+      let existing = copy.find(item => item.moveNumber === move.moveNumber);
+      if (!existing) {
+        existing = { moveNumber: move.moveNumber }
+        copy.push(existing)
+      }
+      existing[move.type] = move.text
+      return copy
+    });
   }
 
   const setup = () => {
-    setImageUrl('/clean.jpeg')
-    const newBoxes = setupBoxesWithCheatMoves(cheatMoves, setBoxes)
-    
+    setMoveList(cheatMoveList)
   }
 
-  const logBoxes = useCallback(() => {
-    console.log(boxes);
-    console.log(JSON.stringify(boxes));
-  }, [boxes]);
 
 
   return (
@@ -81,31 +133,16 @@ const Body = () => {
             >Set up </button> */}
         <UploadPanel
           onImageChange={(url) => setImageUrl(url)}
-          onResult={(box) => {
-            setBoxes(prev => box ? [...prev, box] : [...prev]);
-          }}
-          logBoxes={logBoxes}
+          onResult={(move) => updateMoves(move)}
         />
 
-        {imageUrl && (
-          <div className="mt-6">
-            <button
-              onClick={validateAndUpdateUi}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-md rounded-md px-3 py-1 transition-colors"
-            >
-              Validate position
-            </button>
-            <ImagePanel imageUrl={imageUrl} boxes={boxes} setBoxes={setBoxes} />
-            
-          </div>
-        )}
-
-        {pgn && (
-          <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
+        {moveList.length > 0 && (
+          <>
+            <MovesEditor moveList={moveList} canEdit={isDone} pgnIssue={pgnIssue} onChangeMove={updateMoves} />
             <ChessBoard pgn={pgn} />
-            <CopyPgnButton text={pgn} />
-          </div>
+          </>
         )}
+        
       </div>
     </div>
   );

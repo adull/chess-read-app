@@ -1,29 +1,5 @@
 import { Chess } from "chess.js";
-import { v4 as uuidv4 } from "uuid"
 
-// helper function to safely attempt a move
-export const tryMove = ({ chess, box, color, moveIndex }) => {
-  const moveText = box?.text ?? '';
-  try {
-    
-    const move = chess.move(moveText, { sloppy: true });
-    if (!move) {
-      // console.log({ moveText, box, color, moveIndex })
-      return {
-        success: false,
-        problemBox: box,
-        error: `Invalid ${color} move "${moveText}" at move ${moveIndex + 1}`,
-      };
-    }
-    return { success: true };
-  } catch (err) {
-    return {
-      success: false,
-      problemBox: box,
-      error: `Error parsing ${color} move "${moveText}" at move ${moveIndex + 1}: ${err.message}`,
-    };
-  }
-};
 
 export const isPromotionMove = (piece, targetSquare) => {
   return (
@@ -32,131 +8,136 @@ export const isPromotionMove = (piece, targetSquare) => {
   );
 };
 
-export const validatePosition = (boxes) => {
-  const chess = new Chess();
 
-  // group into triples: [index, white, black]
-  const moves = [];
-  for (let i = 0; i < boxes.length; i += 3) {
-    const moveNum = boxes[i];
-    const whiteBox = boxes[i + 1];
-    const blackBox = boxes[i + 2];
-    if (!moveNum) continue;
-    moves.push({ moveNum, whiteBox, blackBox });
+
+export const tryMove = ({ chess, box, color, moveIndex }) => {
+  const san = box.text?.trim();
+
+  if (!san) {
+    return { success: true };
   }
 
-  for (let i = 0; i < moves.length; i++) {
-    const { whiteBox, blackBox } = moves[i];
+  try {
+    const move = chess.move(san, { sloppy: true });
 
-    if (whiteBox?.text) {
-      const result = tryMove({chess, box: whiteBox, color: "white", moveIndex: i});
-      if (!result.success) {
-        return { ...result, partialPGN: chess.pgn() };
-      }
+    if (move) {
+      return { success: true };
     }
 
-    if (blackBox?.text) {
-      const result = tryMove({chess, box: blackBox, color: "black", moveIndex: i});
-      if (!result.success) {
-        return { ...result, partialPGN: chess.pgn() };
-      }
-    }
+    // Illegal move (chess.move returned null)
+    return {
+      success: false,
+      error: `Illegal ${color} move at move ${moveIndex + 1}: "${san}"`,
+      moveNumber: moveIndex + 1,
+      color
+    };
+
+  } catch (err) {
+    return {
+      success: false,
+      error: err.message || `Invalid ${color} move "${san}"`,
+      moveNumber: moveIndex + 1,
+      color
+    };
   }
-
-  return { success: true, fullPGN: chess.pgn() };
 };
 
-export const setupBoxesWithCheatMoves = (moves, setBoxes) => {
-    // layout configuration
-    const startTop = 26; // moved down slightly
-    const endBottom = 90; // stop ~5% from bottom
-    const numMoves = moves.length;
-    const totalSpan = endBottom - startTop;
-    const rowGap = totalSpan / (numMoves - 1);
+export function* validateMovesLive(moves) {
+  console.log({ moves })
+  const chess = new Chess();
+  let stopped = false;
 
-    const numCol = 8; // move numbers
-    const whiteCol = 20; // white moves
-    const blackCol = 58; // black moves
-    const boxW = 8;
-    const boxH = 3;
+  const annotate = (obj, validity, error = null) =>
+    obj ? { text: obj, validity, error } : null;
 
-    const boxes = moves.flatMap((pair, i) => {
-      const [white, black] = pair;
-      const y = startTop + i * rowGap;
-      const moveNum = `${i + 1}.`;
+  const updatedMoves = moves.map(m => ({
+    moveNumber: m.moveNumber,
+    white: m.white ? { text: m.white } : null,
+    black: m.black ? { text: m.black } : null,
+  }));
+  console.log({ updatedMoves })
 
-      const rowBoxes = [
-        {
-          id: uuidv4(),
-          text: moveNum,
-          top: y,
-          left: numCol,
-          width: 4,
-          height: boxH,
-          meta: {
-            type: "index",
-            moveNumber: moveNum
-          }
-        },
-      ];
+  for (let i = 0; i < updatedMoves.length; i++) {
+    const move = updatedMoves[i];
 
-      if (white) {
-        rowBoxes.push({
-          id: uuidv4(),
-          text: white,
-          top: y,
-          left: whiteCol,
-          width: boxW,
-          height: boxH,
-          meta: {
-            type: "white",
-            moveNumber: moveNum
-          }
-        });
-      }
-
-      if (black) {
-        rowBoxes.push({
-          id: uuidv4(),
-          text: black,
-          top: y,
-          left: blackCol,
-          width: boxW,
-          height: boxH,
-          meta: {
-            type: "black",
-            moveNumber: moveNum
-          }
-        });
-      }
-
-      
-
-      return rowBoxes;
-    });
-
-    setBoxes(boxes);
-    return boxes;
-}
-
-export const boxesToMoves = (boxes) => {
-  const movesMap = new Map();
-
-  console.log(`in boxes to moves..`)
-  for (const box of boxes) {
-    console.log(box)
-
-    const moveNum = box.moveNumber;
-    if (!movesMap.has(moveNum)) {
-      movesMap.set(moveNum, { id: uuidv4(), moveNumber: moveNum });
+    if (stopped) {
+      if (move.white) move.white = annotate(move.white, "unreached");
+      if (move.black) move.black = annotate(move.black, "unreached");
+      continue;
     }
 
-    const move = movesMap.get(moveNum);
-    if (box.type === "white") move.white = { id: uuidv4(), ...box};
-    if (box.type === "black") move.black = { id: uuidv4(), ...box};
+    // ---- WHITE ----
+    if (move.white) {
+      const result = tryMove({ chess, box: move.white, color: "white", moveIndex: i });
+
+      console.log({ result })
+      console.log({move})
+      if (result.success) {
+        // chess.move(move.white.text, { sloppy: true });
+        move.white = annotate(move.white.text, "valid");
+
+        yield {
+          moveNumber: move.moveNumber,
+          color: "white",
+          success: true,
+          updatedMove: move,
+          pgn: chess.pgn(),    // <-- SUCCESS PGN HERE
+        };
+
+      } else {
+        move.white = annotate(move.white, "invalid", result.error);
+        stopped = true;
+
+        yield {
+          moveNumber: move.moveNumber,
+          color: "white",
+          success: false,
+          updatedMove: move,
+          pgn: chess.pgn(),
+          issue: {
+            moveNumber: result.moveNumber,
+            color: result.color,
+            message: result.error
+          }
+        };
+        return;
+      }
+    }
+
+    // ---- BLACK ----
+    if (move.black) {
+      const result = tryMove({ chess, box: move.black, color: "black", moveIndex: i });
+
+      if (result.success) {
+        // chess.move(move.black, { sloppy: true });
+        move.black = annotate(move.black.text, "valid");
+
+        yield {
+          moveNumber: move.moveNumber,
+          color: "black",
+          success: true,
+          updatedMove: move,
+          pgn: chess.pgn(),   // <-- SUCCESS PGN HERE
+        };
+
+      } else {
+        move.black = annotate(move.black, "invalid", result.error);
+        stopped = true;
+
+        yield {
+          moveNumber: move.moveNumber,
+          color: "black",
+          success: false,
+          updatedMove: move,
+          pgn: chess.pgn(),
+          issue: {
+            moveNumber: result.moveNumber,
+            color: result.color,
+            message: result.error
+          }
+        };
+        return;
+      }
+    }
   }
-
-  return Array.from(movesMap.values()).sort((a, b) => a.moveNumber - b.moveNumber);
 }
-
-export const problemBoxFromId = (boxes, id) =>  boxes.find(box => box.id === id)

@@ -93,4 +93,6 @@ const cheatMoves = [
     ]
   ];
 
-  export { cheatMoves}
+const cheatMoveList = [{"moveNumber":1,"white":"e4","black":"e5"},{"moveNumber":2,"white":"Nc3","black":"f6"},{"moveNumber":3,"white":"Bc4","black":"Nc6"},{"moveNumber":4,"white":"Nf3","black":"Bc5"},{"moveNumber":5,"white":"Na4","black":"Na5"},{"moveNumber":6,"white":"Bxg8","black":"Bxf7"},{"moveNumber":7,"white":"Kxf7","black":"Rxg8"},{"moveNumber":8,"white":"d4","black":"Nc6"},{"moveNumber":9,"white":"dxe5","black":"Nxe5"},{"moveNumber":10,"white":"Nxe5","black":"fxe5"},{"moveNumber":11,"white":"Rf1","black":"Rf8"},{"moveNumber":12,"white":"Kg1","black":"Rg4"},{"moveNumber":13,"white":"Bxc4","black":"fxg4"},{"moveNumber":14,"white":"Qh5+","black":"g6"},{"moveNumber":15,"white":"Qh7","black":"Qf6"},{"moveNumber":16,"white":"e6","black":"Qf8"},{"moveNumber":17,"white":"Qxg6","black":"Kd8"},{"moveNumber":18,"white":"Qg5!","black":"Qe7"},{"moveNumber":19,"white":"Qxf4","black":"d6"},{"moveNumber":20,"white":"exd6","black":"cxd6"},{"moveNumber":21,"white":"Re1","black":"Qd7"},{"moveNumber":22,"white":"Qfc6","black":"Kc7"}]
+
+export { cheatMoveList, cheatMoves}

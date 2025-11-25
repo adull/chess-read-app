@@ -1,37 +1,28 @@
 import { Chess } from "chess.js";
 import { useCallback, useState, createContext } from 'react'
-import { tryMove } from "../helpers";
-import { boxesToMoves } from "../helpers";
+// import { tryMove } from "../helpers";
+// import { boxesToMoves } from "../helpers";
 
 export const ChessContext = createContext();
 
 export const ChessProvider = ({ children }) => {
-    const [boxes, setBoxes] = useState([]);
     const [moves, setMoves] = useState([]);
     const [problemBox, setproblemBox] = useState({});
     const [pgn, setPgn] = useState('');
     const [pgnIsComplete, setPgnIsComplete] = useState(false);
 
-    const parseAndValidate = useCallback((newBoxes = boxes) => {
-      // console.log({ newBoxes })
-        // const parsedMoves = parseMoves(boxes);
-        const moves = boxesToMoves(newBoxes)
-        // console.log({ moves })
+    const parseAndValidate = useCallback((moves) => {
         const result = validateMoves(moves);
-        // console.log({ result })
-        
-        // console.log({ result })
-        setBoxes(result.boxes);
         setMoves(result.moves);
         setproblemBox(result.problemBox);
         setPgn(result.pgn);
         setPgnIsComplete(result.success);
 
         return result
-    }, [boxes])
+    }, [moves])
 
     const updateBox = (id, updates) => {
-        setBoxes(prev => {
+        setMoves(prev => {
           const updated = prev.map(box => (box.id === id ? { ...box, ...updates } : box));
           parseAndValidate(updated)
           return updated;
@@ -124,12 +115,11 @@ export const ChessProvider = ({ children }) => {
     return (
       <ChessContext.Provider
       value={{
-        boxes,
         moves,
+        setMoves,
         problemBox,
         pgn,
         pgnIsComplete,
-        setBoxes,
         updateBox,
         parseAndValidate,
       }}

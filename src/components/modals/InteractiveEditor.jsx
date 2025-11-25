@@ -168,7 +168,6 @@ const InteractiveEditor = ({ onClose }) => {
       // Apply moves up to the selected position
       for (let i = 0; i <= index; i++) {
         if (allMoves[i]) {
-          console.log({ move: allMoves[i]})
           const move = positionChess.move(allMoves[i]);
           if (!move) {
             console.error(`Failed to apply move ${i}: ${allMoves[i]}`);

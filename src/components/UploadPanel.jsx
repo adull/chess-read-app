@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const UploadPanel = ({ onImageChange, onResult, logBoxes }) => {
+const UploadPanel = ({ onImageChange, onResult }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,28 +60,19 @@ const UploadPanel = ({ onImageChange, onResult, logBoxes }) => {
 
       console.log({ response })
 
-      const boxes = response.data.boxes.map((box) => {
-        return {
-          left: box.left,
-          top: box.top,
-          width: box.width,
-          height: box.height
-        }
-      })
 
-      const boxesStr = boxes.length ? JSON.stringify(boxes) : ''
 
       if (response.data) {
-
+        console.log(`oka...`)
         const id = response.data.recordId;
-        const eventSource = new EventSource(`http://localhost:9001/mothafuckin-api/chess/stream/${id}${boxes.length ? `?boxes=${boxesStr}` : ``}`)
+        const eventSource = new EventSource(`http://localhost:9001/mothafuckin-api/chess/stream/${id}`)
 
         eventSource.onmessage = (event) => {
           console.log({event})
           if (event.data === "[DONE]") {
-            logBoxes()
             console.log("Stream complete");
             eventSource.close();
+            setIsLoading(false)
             return;
           }
         
@@ -109,8 +100,7 @@ const UploadPanel = ({ onImageChange, onResult, logBoxes }) => {
           err.message ||
           "Failed to upload image. Ensure backend is running."
       );
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   };
 
